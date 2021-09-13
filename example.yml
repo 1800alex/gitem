@@ -1,0 +1,12 @@
+debug: true
+# mock: true
+repos:
+  - name: "BATS Kernel iMX6"
+    url: "https://git.portal.batswireless.com/git/bats/KerneliMX6.git"
+    path: "./test/KerneliMX6"
+    depth: 1
+  - name: "BATS Kernel Sitara"
+    url: "https://git.portal.batswireless.com/git/bats/KernelSitara.git"
+    path: "./test/KernelSitara"
+    # depth: 1
+    autostash: true
