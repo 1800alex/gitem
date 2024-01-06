@@ -32,8 +32,8 @@ WORKDIR /var/lib/git
 ENV CGIT_LFS_LISTEN="tcp://:8080" \
 	CGIT_LFS_HOST="127.0.0.1:8080" \
 	CGIT_LFS_CONTENTPATH="/var/lib/git/lfs" \
-	CGIT_LFS_ADMINUSER="admin" \
-	CGIT_LFS_ADMINPASS="admin"
+	CGIT_LFS_ADMINUSER="" \
+	CGIT_LFS_ADMINPASS=""
 
 COPY entrypoint.sh /
 RUN chmod u+x /entrypoint.sh

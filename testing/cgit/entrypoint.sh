@@ -5,7 +5,6 @@
 # Create ssh host key if not present
 if [ ! -f /etc/ssh/ssh_host_rsa_key ]; then
 	ssh-keygen -A
-
 fi
 
 # Setup gitolite at volume /var/lib/git
@@ -194,35 +193,18 @@ fi
 spawn-fcgi -s /run/fcgiwrap/fcgiwrap.socket -f /usr/bin/fcgiwrap
 chmod 660 /run/fcgiwrap/fcgiwrap.socket
 
-# Initialize 5 git repositories, each with 10 commits and 10 tags
-git config --global user.email "test@example.com"
-git config --global user.name "Test User"
-
-for i in $(seq 1 5); do
-	mkdir -p /var/lib/git/repositories/repo$i
-	cd /var/lib/git/repositories/repo$i
-	git init
-	for j in $(seq 1 10); do
-		printf "# repo$i\n\nCommit: $j" > README.md
-		git add README.md
-		git commit -m "repo$i commit $j"
-	done
-	for j in $(seq 1 10); do
-		git tag "v0.0.$j"
-	done
-done
-
 # Start git-daemon
 git daemon --detach --reuseaddr --base-path=/var/lib/git/repositories /var/lib/git/repositories
 
 export LFS_LISTEN=${CGIT_LFS_LISTEN:-"tcp://:8080"}
-export LFS_HOST=${CGIT_LFS_HOST:-"localhost:8080"}
-export LFS_CONTENTPATH=${CGIT_LFS_CONTENTPATH:-"/var/lib/git/lfs"}
-export LFS_ADMINUSER=${CGIT_LFS_ADMINUSER:-"admin"}
-export LFS_ADMINPASS=${CGIT_LFS_ADMINPASS:-"password"}
+export LFS_HOST=${CGIT_LFS_HOST:-"0.0.0.0:8080"}
+export LFS_METADB=${CGIT_LFS_METADB:-"/var/lib/git/lfs.db"}
+export LFS_CONTENTPATH=${CGIT_LFS_CONTENTPATH:-"/var/lib/git/lfs-content"}
+export LFS_ADMINUSER=${CGIT_LFS_ADMINUSER:-""}
+export LFS_ADMINPASS=${CGIT_LFS_ADMINPASS:-""}
 export LFS_CERT=${CGIT_LFS_CERT:-""}
 export LFS_KEY=${CGIT_LFS_KEY:-""}
-export LFS_SCHEME=${CGIT_LFS_SCHEME:-""}
+export LFS_SCHEME=${CGIT_LFS_SCHEME:-"http"}
 
 /root/go/bin/lfs-test-server &
 
