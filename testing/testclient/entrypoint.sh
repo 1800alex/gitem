@@ -103,8 +103,6 @@ git config --global init.defaultBranch master
 # Wait for gitbucket to be ready
 gitbucket_ready
 
-sleep 5 # wait for gitbucket to be ready
-
 # attempt a login and store the cookie
 root_sessid=$(gitbucket_login root root)
 
@@ -134,8 +132,6 @@ token=$(gitbucket_get "$test_sessid" "http://gitbucket/test/_application" | grep
 echo "Token: $token"
 
 ## Setup gitbucket
-sleep 5 # wait for gitbucket to be ready
-
 # Initialize 5 git repositories, each with 10 commits and 10 tags
 for i in $(seq 1 5); do
 	mkdir -p repositories/repo$i
@@ -151,7 +147,12 @@ for i in $(seq 1 5); do
 		done
 
 		git remote add origin git@gitbucket:/test/repo$i.git
-		git push -u origin master
+
+		while ! git push -u origin master; do
+			echo "git push failed, retrying..."
+			sleep 1
+		done
+
 		git push --tags
 	)
 
@@ -170,7 +171,10 @@ for i in $(seq 6 10); do
 		git add README.md
 		git commit -m "repo$i commit 1"
 		git remote add origin git@gitbucket:/test/repo$i.git
-		git push -u origin master
+		while ! git push -u origin master; do
+			echo "git push failed, retrying..."
+			sleep 1
+		done
 
 		git config -f .lfsconfig lfs.url http://test:password@gitbucket/test/repo$i.git/info/lfs
 		git add .lfsconfig
