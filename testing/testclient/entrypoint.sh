@@ -160,15 +160,17 @@ done
 for i in $(seq 6 10); do
 	mkdir -p repositories/repo$i
 	(
+		gitbucket_new_repo "$test_sessid" "test" "repo$i" "My gitbucket test repo $i"
 		cd repositories/repo$i
 		git init
-
-		printf "# repo$i\n\nLFS file" > README.md
+		printf "# repo$i\n\nCommit: $j" > README.md
 		git add README.md
 		git commit -m "repo$i commit 1"
-		git tag "v0.0.1"
-
 		git remote add origin git@gitbucket:/test/repo$i.git
+		git push -u origin master
+
+		git config -f .lfsconfig lfs.url http://test:password@gitbucket/test/repo$i.git/info/lfs
+		git add .lfsconfig
 		git lfs install
 		git lfs track "*.bin"
 		git add .gitattributes
@@ -176,7 +178,8 @@ for i in $(seq 6 10); do
 		md5sum file.bin > file.bin.md5
 		git add file.bin file.bin.md5
 		git commit -m "repo$i lfs commit 2"
-		git push -u origin master
+		git push
+		git tag "v0.0.1"
 		git push --tags
 	)
 
