@@ -69,7 +69,7 @@ function gitbucket_new_repo() {
 	local sessid="$1"
 	local owner="$2"
 	local name="$3"
-	local description="$(urlencode "$4")"
+	local description="$(url_encode "$4")"
 	local isPrivate="${5:-false}"
 	curl "$url" -X POST -H "Content-Type: application/x-www-form-urlencoded" -H "Cookie: JSESSIONID=${sessid}" --data-raw "owner=${owner}&name=${name}&description=${description}&isPrivate=${isPrivate}&initOption=EMPTY" 2>/dev/null
 }
@@ -103,6 +103,8 @@ git config --global init.defaultBranch master
 # Wait for gitbucket to be ready
 gitbucket_ready
 
+sleep 5 # wait for gitbucket to be ready
+
 # attempt a login and store the cookie
 root_sessid=$(gitbucket_login root root)
 
@@ -132,6 +134,7 @@ token=$(gitbucket_get "$test_sessid" "http://gitbucket/test/_application" | grep
 echo "Token: $token"
 
 ## Setup gitbucket
+sleep 5 # wait for gitbucket to be ready
 
 # Initialize 5 git repositories, each with 10 commits and 10 tags
 for i in $(seq 1 5); do
