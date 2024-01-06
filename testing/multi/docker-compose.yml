@@ -1,0 +1,28 @@
+version: '3'
+services:
+  gitbucket:
+    build:
+      context: ../gitbucket
+    restart: unless-stopped
+    env_file:
+      - config.env
+  cgit:
+    build:
+      context: ../cgit
+    restart: unless-stopped
+    env_file:
+      - config.env
+  testclient:
+    build:
+      context: ../testclient
+    restart: unless-stopped
+  firefox:
+    image: lscr.io/linuxserver/firefox
+    restart: unless-stopped
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Indiana/Indianapolis
+    ports:
+     - 3000:3000
+    shm_size: "1gb"

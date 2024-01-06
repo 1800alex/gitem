@@ -7,19 +7,22 @@ import (
 )
 
 type RepoConfig struct {
-	Name      string `json:"name" yaml:"name"`
-	URL       string `json:"url" yaml:"url"`
-	Path      string `json:"path" yaml:"path"`
-	LFS       bool   `json:"lfs" yaml:"lfs"`
-	Depth     int    `json:"depth" yaml:"depth"`
-	Autostash bool   `json:"autostash" yaml:"autostash"`
+	Name       string `json:"name" yaml:"name"`
+	URL        string `json:"url" yaml:"url"`
+	Path       string `json:"path" yaml:"path"`
+	LFS        bool   `json:"lfs" yaml:"lfs"`
+	Submodules bool   `json:"submodules" yaml:"submodules"`
+	Depth      int    `json:"depth" yaml:"depth"`
+	Autostash  bool   `json:"autostash" yaml:"autostash"`
 
 	Timeout int `json:"timeout" yaml:"timeout"`
+
+	// TODO can we support depends with a digraph?
 }
 
-//Config holds the configuration struct
-//generate go struct with https://yaml.to-go.online/
-//search regex `yaml:"(.*)"` replace with `json:"$1" yaml:"$1"`
+// Config holds the configuration struct
+// generate go struct with https://yaml.to-go.online/
+// search regex `yaml:"(.*)"` replace with `json:"$1" yaml:"$1"`
 type Config struct {
 	Debug bool         `json:"debug" yaml:"debug"`
 	Mock  bool         `json:"mock" yaml:"mock"`
