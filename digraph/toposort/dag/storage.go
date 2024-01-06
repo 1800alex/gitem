@@ -15,8 +15,6 @@ var (
 // vertex structure added by the user does not contain id information.
 type Vertexer interface {
 	Vertex() (id string, value interface{})
-	WasVisited() bool
-	Visited()
 }
 
 // Edger is the interface that wraps the basic Edge method.
@@ -38,24 +36,14 @@ type StorableDAG interface {
 type storableVertex struct {
 	WrappedID string      `json:"i"`
 	Value     interface{} `json:"v"`
-
-	visited bool `json:"-"`
 }
 
-func (v *storableVertex) Vertex() (id string, value interface{}) {
+func (v storableVertex) Vertex() (id string, value interface{}) {
 	return v.WrappedID, v.Value
 }
 
-func (v *storableVertex) ID() string {
+func (v storableVertex) ID() string {
 	return v.WrappedID
-}
-
-func (v *storableVertex) WasVisited() bool {
-	return v.visited
-}
-
-func (v *storableVertex) Visited() {
-	v.visited = true
 }
 
 // storableEdge implements the Edger interface.

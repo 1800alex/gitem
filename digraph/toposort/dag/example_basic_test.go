@@ -1,8 +1,8 @@
 package dag_test
 
 import (
-	"1800alex/gitem/digraph/dag"
 	"fmt"
+	"github.com/heimdalr/dag"
 )
 
 type foobar struct {

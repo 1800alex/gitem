@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"1800alex/gitem/digraph/dag"
+	"1800alex/gitem/digraph/toposort"
+	"1800alex/gitem/digraph/toposort/dag"
 )
 
 type Project struct {
@@ -39,7 +40,7 @@ func (p Projects) ByName(name string) *Project {
 	return nil
 }
 
-func (p Projects) Visit(ctx context.Context, visitor dag.Vertexer) {
+func (p Projects) Visit(ctx context.Context, visitor toposort.Vertexer) {
 	id, _ := visitor.Vertex()
 	proj := p.ByID(id)
 	if proj == nil {
@@ -90,7 +91,7 @@ func main() {
 	_ = d.AddEdge(vertices[0], vertices[1])
 	_ = d.AddEdge(vertices[0], vertices[2])
 
-	d.OrderedWalk(context.Background(), projects)
+	toposort.TopologicalSort(context.Background(), d, projects)
 
 	// describe the graph
 	fmt.Print(d.String())

@@ -1,7 +1,6 @@
 package dag
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 )
@@ -12,7 +11,7 @@ import (
 // and uses an internal structure to store vertices and edges.
 func (d *DAG) MarshalJSON() ([]byte, error) {
 	mv := newMarshalVisitor(d)
-	d.DFSWalk(context.Background(), mv)
+	d.DFSWalk(mv)
 	return json.Marshal(mv.storableDAG)
 }
 
@@ -33,17 +32,14 @@ func (d *DAG) UnmarshalJSON(_ []byte) error {
 // Example:
 // dag := NewDAG()
 // data, err := json.Marshal(d)
-//
-//	if err != nil {
-//	    panic(err)
-//	}
-//
+// if err != nil {
+//     panic(err)
+// }
 // var wd YourStorableDAG
 // restoredDag, err := UnmarshalJSON(data, &wd)
-//
-//	if err != nil {
-//	    panic(err)
-//	}
+// if err != nil {
+//     panic(err)
+// }
 //
 // For more specific information please read the test code.
 func UnmarshalJSON(data []byte, wd StorableDAG) (*DAG, error) {
@@ -76,7 +72,7 @@ func newMarshalVisitor(d *DAG) *marshalVisitor {
 	return &marshalVisitor{d: d}
 }
 
-func (mv *marshalVisitor) Visit(ctx context.Context, v Vertexer) {
+func (mv *marshalVisitor) Visit(v Vertexer) {
 	mv.StorableVertices = append(mv.StorableVertices, v)
 
 	srcID, _ := v.Vertex()
