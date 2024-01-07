@@ -13,6 +13,7 @@ import (
 type Gitm struct {
 	config *GitmConfig
 
+	maxWorkers int
 	configFile string
 	repoName   string
 	groupName  string
@@ -43,38 +44,49 @@ func (gitm *Gitm) cmdRepos(cmd *cobra.Command, args []string) {
 	}
 }
 
-func (gitm *Gitm) cmdClone(cmd *cobra.Command, args []string) {
-	// TODO: support fetching all repos in parallel
+func (gitm *Gitm) cmdWorker(maxWorkers int, f func(context.Context, RepoConfig) error) {
+	ctx, cancel := GetOSContext()
+	defer cancel()
 
-	for _, repo := range gitm.config.Repos {
-		err := gitm.cmdCloneRepo(repo)
-		if err != nil {
-			// TODO
-			log.Fatalf("%v", err)
-		}
+	worker := NewWorker(maxWorkers, false)
+
+	for i, _ := range gitm.config.Repos {
+		repoConfig := gitm.config.Repos[i]
+		f(ctx, repoConfig)
+	}
+
+	err := worker.Run(ctx)
+	if err != nil {
+		log.Fatalf("%v", err)
 	}
 }
 
-func (gitm *Gitm) cmdCloneRepo(repoConfig RepoConfig) error {
+func (gitm *Gitm) cmdClone(cmd *cobra.Command, args []string) {
+	gitm.cmdWorker(gitm.maxWorkers, func(ctx context.Context, repoConfig RepoConfig) error {
+		return gitm.cmdCloneRepo(ctx, repoConfig)
+	})
+}
+
+func (gitm *Gitm) cmdCloneRepo(ctx context.Context, repoConfig RepoConfig) error {
 	if _, err := os.Stat(repoConfig.Path); err == nil {
-		if err := gitm.runCommandWithOutputFormatting("git", []string{"-C", repoConfig.Path, "pull"}); err != nil {
+		if err := gitm.runCommandWithOutputFormatting(ctx, "git", []string{"-C", repoConfig.Path, "pull"}); err != nil {
 			return fmt.Errorf("Failed to pull repo: %v", err)
 		}
 
 	} else {
-		if err := gitm.runCommandWithOutputFormatting("git", []string{"clone", repoConfig.URL, repoConfig.Path}); err != nil {
+		if err := gitm.runCommandWithOutputFormatting(ctx, "git", []string{"clone", repoConfig.URL, repoConfig.Path}); err != nil {
 			return fmt.Errorf("Failed to clone repo: %v", err)
 		}
 	}
 
 	if repoConfig.UsesLFS {
-		if err := gitm.runCommandWithOutputFormatting("git", []string{"-C", repoConfig.Path, "lfs", "install"}); err != nil {
+		if err := gitm.runCommandWithOutputFormatting(ctx, "git", []string{"-C", repoConfig.Path, "lfs", "install"}); err != nil {
 			return fmt.Errorf("Failed to install lfs repo: %v", err)
 		}
 	}
 
 	if repoConfig.UsesSubrepos {
-		if err := gitm.runCommandWithOutputFormatting("git", []string{"-C", repoConfig.Path, "submodule", "update", "--init", "--recursive"}); err != nil {
+		if err := gitm.runCommandWithOutputFormatting(ctx, "git", []string{"-C", repoConfig.Path, "submodule", "update", "--init", "--recursive"}); err != nil {
 			return fmt.Errorf("Failed to initialize submodules: %v", err)
 		}
 	}
@@ -82,25 +94,45 @@ func (gitm *Gitm) cmdCloneRepo(repoConfig RepoConfig) error {
 	return nil
 }
 
-func (gitm *Gitm) cmdFetch(cmd *cobra.Command, args []string) {
-	worker := NewWorker(10, false)
-
-	for i, _ := range gitm.config.Repos {
-		repoConfig := gitm.config.Repos[i]
-		worker.Add(func() error {
-			return gitm.cmdFetchRepo(repoConfig)
-		})
-	}
-
-	err := worker.Run(context.TODO())
-	if err != nil {
-		log.Fatalf("%v", err)
-	}
+func (gitm *Gitm) cmdPull(cmd *cobra.Command, args []string) {
+	gitm.cmdWorker(gitm.maxWorkers, func(ctx context.Context, repoConfig RepoConfig) error {
+		return gitm.cmdPullRepo(ctx, repoConfig)
+	})
 }
 
-func (gitm *Gitm) cmdFetchRepo(repoConfig RepoConfig) error {
+func (gitm *Gitm) cmdPullRepo(ctx context.Context, repoConfig RepoConfig) error {
 	if _, err := os.Stat(repoConfig.Path); err == nil {
-		err := gitm.runCommandWithOutputFormatting("git", []string{"-C", repoConfig.Path, "fetch"})
+		if err := gitm.runCommandWithOutputFormatting(ctx, "git", []string{"-C", repoConfig.Path, "pull"}); err != nil {
+			return fmt.Errorf("Failed to pull repo: %v", err)
+		}
+
+		if repoConfig.UsesLFS {
+			if err := gitm.runCommandWithOutputFormatting(ctx, "git", []string{"-C", repoConfig.Path, "lfs", "pull"}); err != nil {
+				return fmt.Errorf("Failed to pull lfs repo: %v", err)
+			}
+		}
+
+		if repoConfig.UsesSubrepos {
+			if err := gitm.runCommandWithOutputFormatting(ctx, "git", []string{"-C", repoConfig.Path, "submodule", "update", "--init", "--recursive"}); err != nil {
+				return fmt.Errorf("Failed to initialize submodules: %v", err)
+			}
+		}
+	} else {
+		return fmt.Errorf("Repo %s does not exist", gitm.repoName)
+	}
+
+	return nil
+}
+
+func (gitm *Gitm) cmdFetch(cmd *cobra.Command, args []string) {
+	gitm.cmdWorker(gitm.maxWorkers, func(ctx context.Context, repoConfig RepoConfig) error {
+		return gitm.cmdFetchRepo(ctx, repoConfig)
+	})
+}
+
+func (gitm *Gitm) cmdFetchRepo(ctx context.Context, repoConfig RepoConfig) error {
+	if _, err := os.Stat(repoConfig.Path); err == nil {
+		err := gitm.runCommandWithOutputFormatting(ctx, "git", []string{"-C", repoConfig.Path, "fetch"})
 		if err != nil {
 			return fmt.Errorf("Failed to fetch repo: %v", err)
 		}
@@ -112,20 +144,14 @@ func (gitm *Gitm) cmdFetchRepo(repoConfig RepoConfig) error {
 }
 
 func (gitm *Gitm) cmdStatus(cmd *cobra.Command, args []string) {
-	// TODO: support fetching all repos in parallel
-
-	for _, repo := range gitm.config.Repos {
-		err := gitm.cmdStatusRepo(repo)
-		if err != nil {
-			// TODO
-			log.Fatalf("%v", err)
-		}
-	}
+	gitm.cmdWorker(1, func(ctx context.Context, repoConfig RepoConfig) error {
+		return gitm.cmdStatusRepo(ctx, repoConfig)
+	})
 }
 
-func (gitm *Gitm) cmdStatusRepo(repoConfig RepoConfig) error {
+func (gitm *Gitm) cmdStatusRepo(ctx context.Context, repoConfig RepoConfig) error {
 	if _, err := os.Stat(repoConfig.Path); err == nil {
-		err := gitm.runCommandWithOutputFormatting("git", []string{"-C", repoConfig.Path, "status"})
+		err := gitm.runCommandWithOutputFormatting(ctx, "git", []string{"-C", repoConfig.Path, "status"})
 		if err != nil {
 			return fmt.Errorf("Failed to get repo status: %v", err)
 		}
@@ -152,6 +178,7 @@ func main() {
 	rootCmd.PersistentFlags().StringVarP(&gitm.repoName, "repo", "r", "", "Specify repo")
 	rootCmd.PersistentFlags().StringVarP(&gitm.groupName, "group", "g", "", "Specify group")
 	rootCmd.PersistentFlags().BoolVarP(&gitm.debugMode, "debug", "", false, "Enable debug mode")
+	rootCmd.PersistentFlags().IntVarP(&gitm.maxWorkers, "max-workers", "", 0, "Specify max workers (default: number of CPUs)")
 
 	rootCmd.AddCommand(
 		&cobra.Command{
@@ -174,6 +201,17 @@ func main() {
 				}
 
 				gitm.cmdClone(cmd, args)
+			},
+		},
+		&cobra.Command{
+			Use:   "pull",
+			Short: "Pull repos",
+			Run: func(cmd *cobra.Command, args []string) {
+				if err := gitm.Load(); err != nil {
+					log.Fatalf("%v", err)
+				}
+
+				gitm.cmdPull(cmd, args)
 			},
 		},
 		&cobra.Command{

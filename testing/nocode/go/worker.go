@@ -14,7 +14,7 @@ type Worker struct {
 	ctx    context.Context
 	cancel context.CancelFunc
 
-	queue []func() error
+	queue []func(context.Context) error
 
 	pool *workerpool.WorkerPool[struct{}]
 }
@@ -36,9 +36,17 @@ func (p *Worker) Run(ctx context.Context) error {
 	go func() {
 		// Add jobs to the worker pool.
 		for i, _ := range p.queue {
+			if p.ctx.Err() != nil {
+				break
+			}
+
 			fn := p.queue[i]
 			p.pool.AddJob(func() (struct{}, error) {
-				err := fn()
+				if p.ctx.Err() != nil {
+					return struct{}{}, p.ctx.Err()
+				}
+
+				err := fn(p.ctx)
 				return struct{}{}, err
 			})
 		}
@@ -60,11 +68,10 @@ func (p *Worker) Run(ctx context.Context) error {
 }
 
 func (p *Worker) Stop() {
-	// TODO
 	p.cancel()
 }
 
-func (p *Worker) Add(f func() error) {
+func (p *Worker) Add(f func(context.Context) error) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 

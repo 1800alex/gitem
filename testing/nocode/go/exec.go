@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"io"
 	"os/exec"
@@ -10,7 +11,7 @@ import (
 	"time"
 )
 
-func (gitm *Gitm) runCommandWithOutputFormatting(command string, args []string) error {
+func (gitm *Gitm) runCommandWithOutputFormatting(ctx context.Context, command string, args []string) error {
 	cmd := exec.Command(command, args...)
 
 	startTime := time.Now()
@@ -28,6 +29,17 @@ func (gitm *Gitm) runCommandWithOutputFormatting(command string, args []string) 
 	if err := cmd.Start(); err != nil {
 		return err
 	}
+
+	// kill the process if the context is cancelled
+	done := make(chan error)
+	defer close(done)
+	go func() {
+		select {
+		case <-ctx.Done():
+			cmd.Process.Kill()
+		case <-done:
+		}
+	}()
 
 	// join the command and args together as a single string
 	// for use in the output formatting
