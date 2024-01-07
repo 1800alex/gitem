@@ -10,11 +10,12 @@ import (
 )
 
 type RepoConfig struct {
-	Name         string `yaml:"name"`
-	URL          string `yaml:"url"`
-	Path         string `yaml:"path"`
-	UsesLFS      bool   `yaml:"uses-lfs"`
-	UsesSubrepos bool   `yaml:"uses-submodules"`
+	Name         string   `yaml:"name"`
+	URL          string   `yaml:"url"`
+	Path         string   `yaml:"path"`
+	UsesLFS      bool     `yaml:"uses-lfs"`
+	UsesSubrepos bool     `yaml:"uses-submodules"`
+	Group        []string `yaml:"group"`
 }
 
 type LoggingConfig struct {
@@ -36,8 +37,9 @@ type LoggingConfig struct {
 }
 
 type GitmConfig struct {
-	Logging LoggingConfig `yaml:"logging"`
-	Repos   []RepoConfig  `yaml:"repos"`
+	RequireGroup *bool         `yaml:"require-group"`
+	Logging      LoggingConfig `yaml:"logging"`
+	Repos        []RepoConfig  `yaml:"repos"`
 }
 
 func findConfigFiles(dir string) []string {
