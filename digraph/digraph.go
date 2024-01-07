@@ -15,10 +15,6 @@ type Project struct {
 	vertexID string
 }
 
-func (p *Project) ID() string {
-	return p.Name
-}
-
 type Projects []Project
 
 func (p Projects) Len() int {
@@ -44,11 +40,6 @@ func (p Projects) ByName(name string) *Project {
 }
 
 func ProjectVisit(ctx context.Context, id string, v Project) {
-	// id, _ := visitor.Vertex()
-	// proj := p.ByID(id)
-	// if proj == nil {
-	// 	return
-	// }
 	fmt.Println("visiting", v.Name)
 	time.Sleep(2000 * time.Millisecond)
 	fmt.Println("done", v.Name)
@@ -72,9 +63,8 @@ func main() {
 	vertices := []string{}
 
 	for i, project := range projects {
-		fmt.Println("adding vertex", project.ID())
 		v, _ := graph.AddVertex(project.Name, project)
-		fmt.Println("added vertex", v)
+		fmt.Println("added vertex", project.Name, "==", v)
 		projects[i].vertexID = v
 		vertices = append(vertices, v)
 	}
@@ -95,8 +85,9 @@ func main() {
 	_ = graph.AddEdge(vertices[0], vertices[1])
 	_ = graph.AddEdge(vertices[0], vertices[2])
 
-	graph.TopologicalSort(context.Background(), ProjectVisit) // TODO implement Visitor with generics
-
 	// describe the graph
 	fmt.Print(graph.String())
+
+	graph.TopologicalSort(context.Background(), ProjectVisit) // TODO implement Visitor with generics
+
 }
