@@ -1,6 +1,6 @@
 module 1800alex/gitem
 
-go 1.17
+go 1.18
 
 require (
 	github.com/1800alex/go-git-cmd-wrapper/v2 v2.2.1

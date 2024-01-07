@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"1800alex/gitem/digraph/toposort"
-	"1800alex/gitem/digraph/toposort/dag"
 )
 
 type Project struct {
@@ -14,6 +13,10 @@ type Project struct {
 	DependsOn []string
 
 	vertexID string
+}
+
+func (p *Project) ID() string {
+	return p.Name
 }
 
 type Projects []Project
@@ -40,19 +43,18 @@ func (p Projects) ByName(name string) *Project {
 	return nil
 }
 
-func (p Projects) Visit(ctx context.Context, visitor toposort.Vertexer) {
-	id, _ := visitor.Vertex()
-	proj := p.ByID(id)
-	if proj == nil {
-		return
-	}
-	fmt.Println("visiting", proj.Name)
+func ProjectVisit(ctx context.Context, id string, v Project) {
+	// id, _ := visitor.Vertex()
+	// proj := p.ByID(id)
+	// if proj == nil {
+	// 	return
+	// }
+	fmt.Println("visiting", v.Name)
 	time.Sleep(2000 * time.Millisecond)
-	fmt.Println("done", proj.Name)
+	fmt.Println("done", v.Name)
 }
 
 func main() {
-
 	projects := Projects{
 		{Name: "alfa"},
 		{Name: "bravo", DependsOn: []string{"alfa"}},
@@ -65,12 +67,14 @@ func main() {
 	}
 
 	// initialize a new graph
-	d := dag.NewDAG()
+	graph := toposort.New[Project]()
 
 	vertices := []string{}
 
 	for i, project := range projects {
-		v, _ := d.AddVertex(project.Name)
+		fmt.Println("adding vertex", project.ID())
+		v, _ := graph.AddVertex(project.Name, project)
+		fmt.Println("added vertex", v)
 		projects[i].vertexID = v
 		vertices = append(vertices, v)
 	}
@@ -83,16 +87,16 @@ func main() {
 				continue
 			}
 
-			_ = d.AddEdge(dep.vertexID, project.vertexID)
+			_ = graph.AddEdge(dep.vertexID, project.vertexID)
 		}
 	}
 
 	// add the above vertices and connect them with two edges
-	_ = d.AddEdge(vertices[0], vertices[1])
-	_ = d.AddEdge(vertices[0], vertices[2])
+	_ = graph.AddEdge(vertices[0], vertices[1])
+	_ = graph.AddEdge(vertices[0], vertices[2])
 
-	toposort.TopologicalSort(context.Background(), d, projects)
+	graph.TopologicalSort(context.Background(), ProjectVisit) // TODO implement Visitor with generics
 
 	// describe the graph
-	fmt.Print(d.String())
+	fmt.Print(graph.String())
 }
