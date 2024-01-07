@@ -223,16 +223,14 @@ func (gitm *Gitm) formatAndPrintLines(streamType int, command string, r io.Reade
 				streamPrefix = "[stdout] "
 			}
 
-			if streamPrefix != "" {
-				if gitm.config.Logging.Color == nil || true == *gitm.config.Logging.Color {
-					if gitm.config.Logging.StdoutColor != nil {
-						lineColor = colorStringToShellEscape(*gitm.config.Logging.StdoutColor)
-					} else {
-						lineColor = shellColorWhite
-					}
-
-					colorReset = shellColorReset
+			if gitm.config.Logging.Color == nil || true == *gitm.config.Logging.Color {
+				if gitm.config.Logging.StdoutColor != nil {
+					lineColor = colorStringToShellEscape(*gitm.config.Logging.StdoutColor)
+				} else {
+					lineColor = shellColorWhite
 				}
+
+				colorReset = shellColorReset
 			}
 		} else if streamType == 2 {
 			if gitm.config.Logging.StdoutPrefix != nil {
@@ -241,16 +239,14 @@ func (gitm *Gitm) formatAndPrintLines(streamType int, command string, r io.Reade
 				streamPrefix = "[stderr] "
 			}
 
-			if streamPrefix != "" {
-				if gitm.config.Logging.Color == nil || true == *gitm.config.Logging.Color {
-					if gitm.config.Logging.StderrColor != nil {
-						lineColor = colorStringToShellEscape(*gitm.config.Logging.StderrColor)
-					} else {
-						lineColor = shellColorRed
-					}
-
-					colorReset = shellColorReset
+			if gitm.config.Logging.Color == nil || true == *gitm.config.Logging.Color {
+				if gitm.config.Logging.StderrColor != nil {
+					lineColor = colorStringToShellEscape(*gitm.config.Logging.StderrColor)
+				} else {
+					lineColor = shellColorRed
 				}
+
+				colorReset = shellColorReset
 			}
 
 		}

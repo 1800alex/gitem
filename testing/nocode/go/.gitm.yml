@@ -10,8 +10,8 @@ logging:
   command-color: yellow
   stdout-color: green
   stderr-color: red
-  stdout-prefix: "[stdout] "
-  stderr-prefix: "[stderr] "
+  stdout-prefix: ""
+  stderr-prefix: ""
 
 repos:
   - name: repo1
