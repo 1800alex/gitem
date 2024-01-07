@@ -17,8 +17,27 @@ type RepoConfig struct {
 	UsesSubrepos bool   `yaml:"uses-submodules"`
 }
 
+type LoggingConfig struct {
+	Verbose      *bool   `yaml:"verbose"`
+	Timestamps   *bool   `yaml:"timestamps"`
+	StdoutPrefix *string `yaml:"stdout-prefix"`
+	StderrPrefix *string `yaml:"stderr-prefix"`
+	Commands     *bool   `yaml:"commands"`
+	Duration     *bool   `yaml:"duration"`
+	Begin        *bool   `yaml:"begin"`
+
+	Color          *bool   `yaml:"color"`
+	CommandColor   *string `yaml:"command-color"`
+	StdoutColor    *string `yaml:"stdout-color"`
+	StderrColor    *string `yaml:"stderr-color"`
+	TimestampColor *string `yaml:"timestamp-color"`
+	DurationColor  *string `yaml:"duration-color"`
+	BeginColor     *string `yaml:"begin-color"`
+}
+
 type GitmConfig struct {
-	Repos []RepoConfig `yaml:"repos"`
+	Logging LoggingConfig `yaml:"logging"`
+	Repos   []RepoConfig  `yaml:"repos"`
 }
 
 func findConfigFiles(dir string) []string {

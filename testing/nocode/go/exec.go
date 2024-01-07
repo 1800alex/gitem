@@ -11,6 +11,88 @@ import (
 	"time"
 )
 
+var (
+	shellColorReset   = "\033[0m"
+	shellColorRed     = "\033[91m"
+	shellColorGreen   = "\033[92m"
+	shellColorYellow  = "\033[93m"
+	shellColorBlue    = "\033[94m"
+	shellColorMagenta = "\033[95m"
+	shellColorCyan    = "\033[96m"
+	shellColorWhite   = "\033[97m"
+
+	shellColorMap = map[string]string{
+		"red":     shellColorRed,
+		"green":   shellColorGreen,
+		"yellow":  shellColorYellow,
+		"blue":    shellColorBlue,
+		"magenta": shellColorMagenta,
+		"cyan":    shellColorCyan,
+		"white":   shellColorWhite,
+		"reset":   shellColorReset,
+	}
+)
+
+func colorStringToShellEscape(colorString string) string {
+	val, ok := shellColorMap[colorString]
+	if ok {
+		return val
+	}
+
+	return ""
+}
+
+func (gitm *Gitm) logTimestamp() string {
+	msg := ""
+
+	if gitm.config.Logging.Timestamps != nil && false == *gitm.config.Logging.Timestamps {
+		return msg
+	}
+
+	if gitm.config.Logging.Color == nil || true == *gitm.config.Logging.Color {
+		if gitm.config.Logging.TimestampColor != nil {
+			msg += colorStringToShellEscape(*gitm.config.Logging.TimestampColor)
+		} else {
+			msg += shellColorBlue
+		}
+	}
+
+	msg += fmt.Sprintf("[%s]", time.Now().Format("2006-01-02 15:04:05.000"))
+
+	if gitm.config.Logging.Color == nil || true == *gitm.config.Logging.Color {
+		msg += shellColorReset
+	}
+
+	return msg + " "
+}
+
+func (gitm *Gitm) logCommand(command string, args []string) string {
+	msg := ""
+
+	if gitm.config.Logging.Commands != nil && false == *gitm.config.Logging.Commands {
+		return msg
+	}
+
+	if gitm.config.Logging.Color == nil || true == *gitm.config.Logging.Color {
+		if gitm.config.Logging.CommandColor != nil {
+			msg += colorStringToShellEscape(*gitm.config.Logging.CommandColor)
+		} else {
+			msg += shellColorCyan
+		}
+	}
+
+	// join the command and args together as a single string
+	// for use in the output formatting
+	joined := append([]string{command}, args...)
+	msg += "[" + strings.Join(joined, " ") + "]"
+
+	if gitm.config.Logging.Color == nil || true == *gitm.config.Logging.Color {
+		msg += shellColorReset
+	}
+
+	return msg + " "
+}
+
 func (gitm *Gitm) runCommandWithOutputFormatting(ctx context.Context, command string, args []string) error {
 	cmd := exec.Command(command, args...)
 
@@ -41,24 +123,39 @@ func (gitm *Gitm) runCommandWithOutputFormatting(ctx context.Context, command st
 		}
 	}()
 
-	// join the command and args together as a single string
-	// for use in the output formatting
-	joined := append([]string{command}, args...)
+	commandString := gitm.logCommand(command, args)
 
-	gitm.logMutex.Lock()
-	fmt.Printf("\033[94m[%s]\033[0m \033[93m[%s]\033[0m %s\n", time.Now().Format("2006-01-02 15:04:05.000"), strings.Join(joined, " "), "\033[97m[running]\033[0m")
-	gitm.logMutex.Unlock()
+	if gitm.config.Logging.Begin == nil || true == *gitm.config.Logging.Begin {
+		beginString := ""
+		if gitm.config.Logging.Color == nil || true == *gitm.config.Logging.Color {
+			if gitm.config.Logging.BeginColor != nil {
+				beginString += colorStringToShellEscape(*gitm.config.Logging.BeginColor)
+			} else {
+				beginString += shellColorWhite
+			}
+		}
+
+		beginString += "[running]"
+
+		if gitm.config.Logging.Color == nil || true == *gitm.config.Logging.Color {
+			beginString += shellColorReset
+		}
+
+		gitm.logMutex.Lock()
+		fmt.Printf("%s%s%s\n", gitm.logTimestamp(), commandString, beginString)
+		gitm.logMutex.Unlock()
+	}
 
 	var wg sync.WaitGroup
 	wg.Add(2)
 	go func() {
 		defer wg.Done()
-		gitm.formatAndPrintLines("stdout", strings.Join(joined, " "), stdout)
+		gitm.formatAndPrintLines(1, commandString, stdout)
 	}()
 
 	go func() {
 		defer wg.Done()
-		gitm.formatAndPrintLines("stderr", strings.Join(joined, " "), stderr)
+		gitm.formatAndPrintLines(2, commandString, stderr)
 	}()
 
 	err = cmd.Wait()
@@ -67,51 +164,99 @@ func (gitm *Gitm) runCommandWithOutputFormatting(ctx context.Context, command st
 	duration := time.Since(startTime)
 	var durationString string
 
-	if duration < 1*time.Second {
-		durationString = fmt.Sprintf("%dms", duration.Milliseconds())
-	} else if duration < 1*time.Minute {
-		durationString = fmt.Sprintf("%d.%03ds", duration.Seconds(), duration.Milliseconds())
-	} else if duration < 1*time.Hour {
-		durationString = fmt.Sprintf("%dm%02ds", int(duration.Minutes()), int(duration.Seconds())%60)
-	} else {
-		durationString = fmt.Sprintf("%dh%02dm", int(duration.Hours()), int(duration.Minutes())%60)
-	}
+	if gitm.config.Logging.Duration == nil || true == *gitm.config.Logging.Duration {
+		if gitm.config.Logging.Color == nil || true == *gitm.config.Logging.Color {
+			if gitm.config.Logging.DurationColor != nil {
+				durationString += colorStringToShellEscape(*gitm.config.Logging.DurationColor)
+			} else {
+				durationString += shellColorMagenta
+			}
+		}
 
-	if err != nil {
-		gitm.logMutex.Lock()
-		fmt.Printf("\033[94m[%s]\033[0m \033[93m[%s]\033[0m %s\n", time.Now().Format("2006-01-02 15:04:05.000"), strings.Join(joined, " "), fmt.Sprintf("\033[91m[failed after %s]\033[0m", durationString))
-		gitm.logMutex.Unlock()
-		return err
+		if err != nil {
+			durationString += "[failed after "
+		} else {
+			durationString += "[completed after "
+		}
+
+		if duration < 1*time.Second {
+			durationString += fmt.Sprintf("%dms", duration.Milliseconds())
+		} else if duration < 1*time.Minute {
+			durationString += fmt.Sprintf("%d.%03ds", duration.Seconds(), duration.Milliseconds())
+		} else if duration < 1*time.Hour {
+			durationString += fmt.Sprintf("%dm%02ds", int(duration.Minutes()), int(duration.Seconds())%60)
+		} else {
+			durationString += fmt.Sprintf("%dh%02dm", int(duration.Hours()), int(duration.Minutes())%60)
+		}
+
+		durationString += "]"
+
+		if gitm.config.Logging.Color == nil || true == *gitm.config.Logging.Color {
+			durationString += shellColorReset
+		}
 	}
 
 	gitm.logMutex.Lock()
-	fmt.Printf("\033[94m[%s]\033[0m \033[93m[%s]\033[0m %s\n", time.Now().Format("2006-01-02 15:04:05.000"), strings.Join(joined, " "), fmt.Sprintf("\033[97m[completed after %s]\033[0m", durationString))
+	fmt.Printf("%s%s%s\n", gitm.logTimestamp(), commandString, durationString)
 	gitm.logMutex.Unlock()
+
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
 
-func (gitm *Gitm) formatAndPrintLines(streamName string, command string, r io.Reader) {
+func (gitm *Gitm) formatAndPrintLines(streamType int, command string, r io.Reader) {
 	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
 		line := scanner.Text()
 
-		timestamp := time.Now().Format("2006-01-02 15:04:05.000")
-		colorReset := "\033[0m"
-
 		var lineColor string
+		var colorReset string
 		var streamPrefix string
 
-		if streamName == "stdout" {
-			lineColor = "\033[97m" // White for stdout
-			streamPrefix = "[stdout] "
-		} else if streamName == "stderr" {
-			lineColor = "\033[91m" // Red for stderr
-			streamPrefix = "[stderr] "
+		if streamType == 1 {
+			if gitm.config.Logging.StdoutPrefix != nil {
+				streamPrefix = *gitm.config.Logging.StdoutPrefix
+			} else {
+				streamPrefix = "[stdout] "
+			}
+
+			if streamPrefix != "" {
+				if gitm.config.Logging.Color == nil || true == *gitm.config.Logging.Color {
+					if gitm.config.Logging.StdoutColor != nil {
+						lineColor = colorStringToShellEscape(*gitm.config.Logging.StdoutColor)
+					} else {
+						lineColor = shellColorWhite
+					}
+
+					colorReset = shellColorReset
+				}
+			}
+		} else if streamType == 2 {
+			if gitm.config.Logging.StdoutPrefix != nil {
+				streamPrefix = *gitm.config.Logging.StdoutPrefix
+			} else {
+				streamPrefix = "[stderr] "
+			}
+
+			if streamPrefix != "" {
+				if gitm.config.Logging.Color == nil || true == *gitm.config.Logging.Color {
+					if gitm.config.Logging.StderrColor != nil {
+						lineColor = colorStringToShellEscape(*gitm.config.Logging.StderrColor)
+					} else {
+						lineColor = shellColorRed
+					}
+
+					colorReset = shellColorReset
+				}
+			}
+
 		}
 
 		gitm.logMutex.Lock()
-		fmt.Printf("\033[94m[%s]\033[0m \033[93m[%s]\033[0m %s%s%s%s\n", timestamp, command, lineColor, streamPrefix, line, colorReset)
+		fmt.Printf("%s%s%s%s%s%s\n", gitm.logTimestamp(), command, lineColor, streamPrefix, line, colorReset)
 		gitm.logMutex.Unlock()
 	}
 }

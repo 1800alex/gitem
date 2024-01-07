@@ -1,3 +1,18 @@
+logging:
+  color: true
+  timestamps: true
+  verbose: false
+  commands: true
+  duration: true
+  duration-color: cyan
+  begin: true
+  begin-color: cyan
+  command-color: yellow
+  stdout-color: green
+  stderr-color: red
+  stdout-prefix: "[gitm] "
+  stderr-prefix: "[gitm] "
+
 repos:
   - name: repo1
     url: git@gitbucket:/test/repo1.git
