@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"os"
 	"os/exec"
 	"strings"
 	"sync"
@@ -252,7 +253,11 @@ func (gitm *Gitm) formatAndPrintLines(streamType int, command string, r io.Reade
 		}
 
 		gitm.logMutex.Lock()
-		fmt.Printf("%s%s%s%s%s%s\n", gitm.logTimestamp(), command, lineColor, streamPrefix, line, colorReset)
+		if gitm.config.Logging.StderrRedirect != nil && true == *gitm.config.Logging.StderrRedirect {
+			fmt.Printf("%s%s%s%s%s%s\n", gitm.logTimestamp(), command, lineColor, streamPrefix, line, colorReset)
+		} else {
+			fmt.Fprintf(os.Stderr, "%s%s%s%s%s%s\n", gitm.logTimestamp(), command, lineColor, streamPrefix, line, colorReset)
+		}
 		gitm.logMutex.Unlock()
 	}
 }

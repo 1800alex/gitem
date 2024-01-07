@@ -14,6 +14,7 @@ logging:
   stderr-color: red
   stdout-prefix: ""
   stderr-prefix: ""
+  stderr-redirect: true
 
 repos:
   - name: repo1

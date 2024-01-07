@@ -13,8 +13,8 @@ type RepoConfig struct {
 	Name         string   `yaml:"name"`
 	URL          string   `yaml:"url"`
 	Path         string   `yaml:"path"`
-	UsesLFS      bool     `yaml:"uses-lfs"`
-	UsesSubrepos bool     `yaml:"uses-submodules"`
+	UsesLFS      bool     `yaml:"uses-lfs"`        // TODO rename these
+	UsesSubrepos bool     `yaml:"uses-submodules"` // TODO rename these
 	Group        []string `yaml:"group"`
 }
 
@@ -34,6 +34,8 @@ type LoggingConfig struct {
 	TimestampColor *string `yaml:"timestamp-color"`
 	DurationColor  *string `yaml:"duration-color"`
 	BeginColor     *string `yaml:"begin-color"`
+
+	StderrRedirect *bool `yaml:"stderr-redirect"`
 }
 
 type GitmConfig struct {

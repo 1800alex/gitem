@@ -82,6 +82,13 @@ func (gitm *Gitm) cmdWorker(maxWorkers int, f func(context.Context, RepoConfig) 
 			}
 		}
 
+		if gitm.repoName != "" {
+			ok = false
+			if gitm.config.Repos[i].Name == gitm.repoName {
+				ok = true
+			}
+		}
+
 		if !ok {
 			continue
 		}
@@ -192,6 +199,8 @@ func (gitm *Gitm) cmdStatusRepo(ctx context.Context, repoConfig RepoConfig) erro
 
 	return nil
 }
+
+// commit will need a way to present the user with a list of files that have changed which means parsing the output of git status
 
 func cmdVersion(cmd *cobra.Command, args []string) {
 	fmt.Printf("gitm version 0.0.1\n")
@@ -305,6 +314,11 @@ func main() {
 	// TODO: commit
 	// TODO: push (with force, and with tags)
 	// TODO: find (find branch, find tag, find commit, find file, find tag that matches regex
+	// TODO: Multiple origins and call them by name
+	// TODO: Auto stash changes before pull
+	// TODO: Force reset option
+	// TODO: Submodule commands (update, init, etc)
+	// TODO: define config options on command line for logging, etc
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
