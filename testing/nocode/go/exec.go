@@ -33,7 +33,9 @@ func (gitm *Gitm) runCommandWithOutputFormatting(command string, args []string) 
 	// for use in the output formatting
 	joined := append([]string{command}, args...)
 
+	gitm.logMutex.Lock()
 	fmt.Printf("\033[94m[%s]\033[0m \033[93m[%s]\033[0m %s\n", time.Now().Format("2006-01-02 15:04:05.000"), strings.Join(joined, " "), "\033[97m[running]\033[0m")
+	gitm.logMutex.Unlock()
 
 	var wg sync.WaitGroup
 	wg.Add(2)
@@ -64,11 +66,15 @@ func (gitm *Gitm) runCommandWithOutputFormatting(command string, args []string) 
 	}
 
 	if err != nil {
+		gitm.logMutex.Lock()
 		fmt.Printf("\033[94m[%s]\033[0m \033[93m[%s]\033[0m %s\n", time.Now().Format("2006-01-02 15:04:05.000"), strings.Join(joined, " "), fmt.Sprintf("\033[91m[failed after %s]\033[0m", durationString))
+		gitm.logMutex.Unlock()
 		return err
 	}
 
+	gitm.logMutex.Lock()
 	fmt.Printf("\033[94m[%s]\033[0m \033[93m[%s]\033[0m %s\n", time.Now().Format("2006-01-02 15:04:05.000"), strings.Join(joined, " "), fmt.Sprintf("\033[97m[completed after %s]\033[0m", durationString))
+	gitm.logMutex.Unlock()
 
 	return nil
 }
@@ -92,6 +98,8 @@ func (gitm *Gitm) formatAndPrintLines(streamName string, command string, r io.Re
 			streamPrefix = "[stderr] "
 		}
 
+		gitm.logMutex.Lock()
 		fmt.Printf("\033[94m[%s]\033[0m \033[93m[%s]\033[0m %s%s%s%s\n", timestamp, command, lineColor, streamPrefix, line, colorReset)
+		gitm.logMutex.Unlock()
 	}
 }

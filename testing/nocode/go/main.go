@@ -1,9 +1,11 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
+	"sync"
 
 	"github.com/spf13/cobra"
 )
@@ -15,6 +17,8 @@ type Gitm struct {
 	repoName   string
 	groupName  string
 	debugMode  bool
+
+	logMutex sync.Mutex
 }
 
 func (gitm *Gitm) Load() error {
@@ -79,14 +83,18 @@ func (gitm *Gitm) cmdCloneRepo(repoConfig RepoConfig) error {
 }
 
 func (gitm *Gitm) cmdFetch(cmd *cobra.Command, args []string) {
-	// TODO: support fetching all repos in parallel
+	worker := NewWorker(10, false)
 
-	for _, repo := range gitm.config.Repos {
-		err := gitm.cmdFetchRepo(repo)
-		if err != nil {
-			// TODO
-			log.Fatalf("%v", err)
-		}
+	for i, _ := range gitm.config.Repos {
+		repoConfig := gitm.config.Repos[i]
+		worker.Add(func() error {
+			return gitm.cmdFetchRepo(repoConfig)
+		})
+	}
+
+	err := worker.Run(context.TODO())
+	if err != nil {
+		log.Fatalf("%v", err)
 	}
 }
 
