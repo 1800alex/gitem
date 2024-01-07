@@ -1,0 +1,103 @@
+{
+	"folders": [
+		{
+			"name": ".",
+			"path": "./"
+		},
+	],
+	"settings": {
+		"editor.tabSize": 4,
+		"[yaml]": {
+			"editor.formatOnType": true,
+			"editor.formatOnSave": true
+		},
+		"eslint.runtime": "/nix/store/njh6p007ymbmcgas5l7sqqxfmm394zx1-nodejs-18.15.0/bin/node",
+		"files.exclude": {
+			".git": true,
+			".deps": true,
+			"Release": true,
+			"Release/**/*.js": {
+				"when": "$(basename).ts"
+			},
+		},
+		"files.watcherExclude": {
+			"**/.git/objects/**": true,
+		},
+		"clangd.path": "/nix/store/hzfq4jkms0a7q2bbnhci57fbfysx93j9-clang-11.1.0/bin/clangd",
+		"clangd.arguments": [
+			"--background-index"
+		],
+		"go.inferGopath": false,
+		"go.goroot": "/nix/store/n4zsfgw7bp1zpgv93s6m5a04y94y1z97-go-1.19.8",
+		"go.gopath": "/home/alex/gitworkspace/personal/.local/go/vendor",
+		"go.toolsGopath": "/home/alex/gitworkspace/personal/.local/go/vendor",
+		"go.formatTool": "gofmt",
+		"go.toolsEnvVars": {
+			"GOBIN": "/home/alex/gitworkspace/personal/.local/go/vendor/bin/"
+		},
+		"files.associations": {
+			"*.c": "c",
+			"*.h": "c",
+			"*.cc": "cpp",
+			"*.cpp": "cpp",
+			"*.hpp": "cpp"
+		},
+		"editor.formatOnSave": false,
+		"eslint.alwaysShowStatus": true,
+		"eslint.lintTask.enable": true,
+		"eslint.format.enable": true,
+		"eslint.onIgnoredFiles": "warn",
+		"eslint.debug": true,
+		"[c]": {
+			"editor.formatOnType": true,
+			"editor.formatOnSave": true
+		},
+		"[cpp]": {
+			"editor.formatOnType": true,
+			"editor.formatOnSave": true
+		},
+		"[javascript]": {
+			"editor.codeActionsOnSave": {
+				"source.fixAll.eslint": true
+			},
+			"editor.defaultFormatter": "esbenp.prettier-vscode",
+			"editor.formatOnType": true,
+			"editor.formatOnSave": true
+		},
+		"[typescript]": {
+			"editor.codeActionsOnSave": {
+				"source.fixAll.eslint": true
+			},
+			"editor.defaultFormatter": "esbenp.prettier-vscode",
+			"editor.formatOnType": true,
+			"editor.formatOnSave": true
+		},
+		"[vue]": {
+			"editor.codeActionsOnSave": {
+				"source.fixAll.eslint": true
+			},
+			"editor.defaultFormatter": "esbenp.prettier-vscode",
+			"editor.formatOnType": true,
+			"editor.formatOnSave": true
+		},
+		"[gdscript]": {
+			"editor.formatOnType": true,
+			"editor.formatOnSave": true
+		},
+		"[scad]": {
+			"editor.formatOnType": true,
+			"editor.formatOnSave": true
+		},
+		"C_Cpp.autocomplete": "disabled",
+		"C_Cpp.errorSquiggles": "disabled",
+		"C_Cpp.formatting": "disabled",
+		"C_Cpp.intelliSenseEngine": "disabled",
+		"git.ignoreLimitWarning": true,
+		"nixEnvSelector.nixFile": "/home/alex/gitworkspace/personal/warroom/nix/shell.nix",
+		"[javascript][typescript][vue]": {
+			"editor.codeActionsOnSave": {
+				"source.fixAll.eslint": "explicit"
+			}
+		}
+	}
+}
