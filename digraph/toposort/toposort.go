@@ -2,52 +2,18 @@ package toposort
 
 import (
 	"context"
-	"fmt"
 	"sort"
 	"sync"
 )
 
-// storableVertex implements the Vertexer interface.
-// It is implemented as a storable structure.
-// And it uses short json tag to reduce the number of bytes after serialization.
-type storableVertex[T any] struct {
-	WrappedID string `json:"i"`
-	Value     T      `json:"v"`
-}
-
-func (v *storableVertex[T]) Vertex() (id string, value T) {
-	return v.WrappedID, v.Value
-}
-
-func (v *storableVertex[T]) ID() string {
-	return v.WrappedID
-}
-
-// Vertexer is the interface that wraps the basic Vertex method.
-// Vertex returns an id that identifies this vertex and the value of this vertex.
-//
-// The reason for defining this new structure is that the vertex id may be
-// automatically generated when the caller adds a vertex. At this time, the
-// vertex structure added by the user does not contain id information.
-type Vertexer[T any] interface {
-	Vertex() (id string, value T)
-}
-
-// Visitor is the interface that wraps the basic Visit method.
-// It can use the Visitor and XXXWalk functions together to traverse the entire DAG.
-// And access per-vertex information when traversing.
-type Visitor[T any] interface {
-	Visit(context.Context, *storableVertex[T])
-}
-
-type visitationVertex[T any] struct {
-	sv       storableVertex[T]
+type visitationVertex struct {
+	id       string
 	visiting bool
 	visited  bool
 }
 
-func newVisitationVertex[T any](sv storableVertex[T]) *visitationVertex[T] {
-	return &visitationVertex[T]{sv: sv}
+func newVisitationVertex(id string) *visitationVertex {
+	return &visitationVertex{id: id}
 }
 
 type visitation[T any] struct {
@@ -57,11 +23,11 @@ type visitation[T any] struct {
 	wg     sync.WaitGroup
 
 	graph    *Graph[T]
-	vertices map[string]*visitationVertex[T]
+	vertices map[string]*visitationVertex
 }
 
 func newVisitation[T any](g *Graph[T]) *visitation[T] {
-	return &visitation[T]{vertices: make(map[string]*visitationVertex[T]), graph: g}
+	return &visitation[T]{vertices: make(map[string]*visitationVertex), graph: g}
 }
 
 type VertexerFunc[T any] func(context.Context, string, T)
@@ -83,7 +49,12 @@ func (v *visitation[T]) Visit(id string, vfunc VertexerFunc[T]) {
 		vv.visiting = true
 		v.mu.Unlock()
 
-		vfunc(ctx, id, vv.sv.Value)
+		vertex, ok := v.graph.Vertex(id)
+		if !ok {
+			return
+		}
+
+		vfunc(ctx, vertex.ID, vertex.Value)
 
 		v.mu.Lock()
 		vv.visited = true
@@ -146,16 +117,8 @@ func (g *Graph[T]) topoSort(ctx context.Context, vfunc VertexerFunc[T]) {
 
 	allVertices := g.dag.GetVertices()
 	for _, id := range vertexIDs(allVertices) {
-		fmt.Println("vertex", id)
-		value, ok := g.Vertex(id)
-		fmt.Println("vertex", id, value, ok)
-		if !ok {
-			continue
-		}
-		sv := storableVertex[T]{WrappedID: id, Value: value.Value}
-
 		visitation.mu.Lock()
-		visitation.vertices[id] = newVisitationVertex(sv)
+		visitation.vertices[id] = newVisitationVertex(id)
 		visitation.mu.Unlock()
 	}
 

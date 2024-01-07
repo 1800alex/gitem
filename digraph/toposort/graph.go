@@ -2,7 +2,6 @@ package toposort
 
 import (
 	"context"
-	"fmt"
 	"sync"
 
 	"1800alex/gitem/digraph/toposort/dag"
@@ -71,18 +70,6 @@ func (g *Graph[T]) String() string {
 	return g.dag.String()
 }
 
-func (g *Graph[T]) VertexerFunc(vfunc VertexerFunc[T]) VertexerFunc[T] {
-	return func(ctx context.Context, id string, v T) {
-		fmt.Println("visiting", id)
-		vertex, ok := g.Vertex(id)
-		if !ok {
-			return
-		}
-
-		vfunc(ctx, id, vertex.Value)
-	}
-}
-
 func (g *Graph[T]) TopologicalSort(ctx context.Context, vfunc VertexerFunc[T]) {
-	g.topoSort(ctx, g.VertexerFunc(vfunc))
+	g.topoSort(ctx, vfunc)
 }
