@@ -75,25 +75,25 @@ function gitbucket_new_repo() {
 }
 
 if [ ! -z "$TESTCLIENT_SSH_PRIVATE_KEY" ]; then
-	mkdir -p /root/.ssh
-	chmod 700 /root/.ssh
-	cat "$TESTCLIENT_SSH_PRIVATE_KEY" > /root/.ssh/id_rsa
-	cat "$TESTCLIENT_SSH_PUBLIC_KEY" > /root/.ssh/id_rsa.pub
-	chmod 600 /root/.ssh/id_rsa
-	chmod 600 /root/.ssh/id_rsa.pub
+	mkdir -p ${HOME}/.ssh
+	chmod 700 ${HOME}/.ssh
+	cat "$TESTCLIENT_SSH_PRIVATE_KEY" > ${HOME}/.ssh/id_rsa
+	cat "$TESTCLIENT_SSH_PUBLIC_KEY" > ${HOME}/.ssh/id_rsa.pub
+	chmod 600 ${HOME}/.ssh/id_rsa
+	chmod 600 ${HOME}/.ssh/id_rsa.pub
 
-	echo "" > /root/.ssh/config
-	echo "Host cgit" >> /root/.ssh/config
-	echo "  User git" >> /root/.ssh/config
-	echo "  IdentityFile /root/.ssh/id_rsa" >> /root/.ssh/config
-	echo "  StrictHostKeyChecking no" >> /root/.ssh/config
-	echo "" >> /root/.ssh/config
+	echo "" > ${HOME}/.ssh/config
+	echo "Host cgit" >> ${HOME}/.ssh/config
+	echo "  User git" >> ${HOME}/.ssh/config
+	echo "  IdentityFile ${HOME}/.ssh/id_rsa" >> ${HOME}/.ssh/config
+	echo "  StrictHostKeyChecking no" >> ${HOME}/.ssh/config
+	echo "" >> ${HOME}/.ssh/config
 
-	echo "Host gitbucket" >> /root/.ssh/config
-	echo "  User git" >> /root/.ssh/config
-	echo "  IdentityFile /root/.ssh/id_rsa" >> /root/.ssh/config
-	echo "  StrictHostKeyChecking no" >> /root/.ssh/config
-	echo "" >> /root/.ssh/config
+	echo "Host gitbucket" >> ${HOME}/.ssh/config
+	echo "  User git" >> ${HOME}/.ssh/config
+	echo "  IdentityFile ${HOME}/.ssh/id_rsa" >> ${HOME}/.ssh/config
+	echo "  StrictHostKeyChecking no" >> ${HOME}/.ssh/config
+	echo "" >> ${HOME}/.ssh/config
 fi
 
 git config --global user.email "test@example.com"

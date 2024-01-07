@@ -1,16 +1,16 @@
 version: '3'
 services:
-  gitea:
-    image: gitea/gitea:1.21.3
-    container_name: gitea
-    environment:
-      - USER_UID=1000
-      - USER_GID=1000
-    restart: unless-stopped
-    volumes:
-      - ./gitea/conf/app.ini:/data/gitea/conf/app.ini
-      - /etc/timezone:/etc/timezone:ro
-      - /etc/localtime:/etc/localtime:ro
+  # gitea:
+  #   image: gitea/gitea:1.21.3
+  #   container_name: gitea
+  #   environment:
+  #     - USER_UID=1000
+  #     - USER_GID=1000
+  #   restart: unless-stopped
+  #   volumes:
+  #     - ./gitea/conf/app.ini:/data/gitea/conf/app.ini
+  #     - /etc/timezone:/etc/timezone:ro
+  #     - /etc/localtime:/etc/localtime:ro
   gitbucket:
     build:
       context: ../gitbucket
@@ -29,13 +29,14 @@ services:
     restart: unless-stopped
     volumes:
       - ./keys:/keys:ro
+      - ../nocode:/home/test/nocode
     env_file:
       - config.env
     depends_on:
       - gitbucket
       - cgit
   firefox:
-    image: lscr.io/linuxserver/firefox
+    image: lscr.io/linuxserver/firefox@sha256:2bf06b5b3d35ccb64279fbd5a29f1df8b30ae780f08c621df1789ba1568398d1
     restart: unless-stopped
     environment:
       - PUID=1000

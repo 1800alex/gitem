@@ -1,0 +1,145 @@
+#!/usr/bin/env bash
+set -e
+
+_bin_dir="$(dirname "$0")"
+
+cfg_find() {
+	# recurisvely search up looking for gitm.yml or gitm.yaml or .gitm.yml or .gitm.yaml
+	local dir="$(pwd)"
+	local config_file
+
+	while [ -n "${dir}" ]; do
+		config_file="$(find "${dir}" -maxdepth 1 -type f -name 'gitm.yml' -o -name 'gitm.yaml' -o -name '.gitm.yml' -o -name '.gitm.yaml' | head -n 1)"
+		if [ -n "${config_file}" ]; then
+			echo "${config_file}"
+			return 0
+		fi
+		dir="$(dirname "${dir}")"
+	done
+}
+
+cmd_repos() {
+	echo "${_config_contents}" | yq e '.repos[].name'
+	if [ $? -ne 0 ]; then
+		2>&1 echo "Failed to get repos"
+		exit 1
+	fi
+}
+
+cfg_repo_get() {
+	local repo_name="$1"
+	local var_name="$2"
+	echo "${_config_contents}" | yq e ".repos[] | select(.name == \"${repo_name}\" ) | .${var_name}"
+	if [ $? -ne 0 ]; then
+		2>&1 echo "Failed to get ${var_name} for repo ${repo_name}"
+		exit 1
+	fi
+}
+
+is_truthy() {
+	local value="$1"
+	# value can be true/TRUE/t/T/1 or yes/YES/y/Y/on/ON
+	if [[ "$value" =~ ^[tT1yY][rR]?[uU]?[eE]?|[yY][eE]?[sS]?|[oO][nN]$ ]]; then
+		return 0
+	fi
+	return 1
+}
+
+is_falsey() {
+	local value="$1"
+	# value can be false/FALSE/f/F/0 or no/NO/n/N/off/OFF
+	if [[ "$value" =~ ^[fF0nN][aA]?[lL]?[sS]?[eE]?|[nN][oO]?|[oO][fF][fF]$ ]]; then
+		return 0
+	fi
+	return 1
+}
+
+cmd_clone() {
+	# REPO_NAME should come from the environment or be passed in as an argument
+	if [ -z "${REPO_NAME}" ]; then
+		if [ -n "$1" ]; then
+			REPO_NAME="$1"
+		else
+			2>&1 echo "REPO_NAME is not set"
+			exit 1
+		fi
+	fi
+
+	# fetch repo info from config
+	url="$(cfg_repo_get "${REPO_NAME}" "url")"
+	path="$(cfg_repo_get "${REPO_NAME}" "path")"
+	uses_lfs="$(cfg_repo_get "${REPO_NAME}" "uses-lfs")"
+	uses_submodules="$(cfg_repo_get "${REPO_NAME}" "uses-submodules")"
+
+	# ensure repo path is empty or we should do a pull
+	if [ -d "${path}" ]; then
+		git -C "${path}" pull
+	else
+		git clone "${url}" "${path}"
+	fi
+
+	# ensure lfs is installed if needed
+	if is_truthy ${uses_lfs}; then
+		git -C "${path}" lfs install
+	fi
+
+	# ensure submodules are initialized if needed
+	if is_truthy ${uses_submodules}; then
+		git -C "${path}" submodule update --init --recursive
+	fi
+}
+
+cmd_fetch() {
+	# REPO_NAME should come from the environment or be passed in as an argument
+	if [ -z "${REPO_NAME}" ]; then
+		if [ -n "$1" ]; then
+			REPO_NAME="$1"
+		else
+			2>&1 echo "REPO_NAME is not set"
+			exit 1
+		fi
+	fi
+
+	# fetch repo info from config
+	url="$(cfg_repo_get "${REPO_NAME}" "url")"
+	path="$(cfg_repo_get "${REPO_NAME}" "path")"
+	uses_lfs="$(cfg_repo_get "${REPO_NAME}" "uses-lfs")"
+	uses_submodules="$(cfg_repo_get "${REPO_NAME}" "uses-submodules")"
+
+	# ensure repo path is empty or we should do a pull
+	if [ -d "${path}" ]; then
+		git -C "${path}" fetch
+	else
+		2>&1 echo "Repo ${REPO_NAME} does not exist"
+		exit 1
+	fi
+}
+
+## startup
+
+cfg_file="${CONFIG_FILE:-$(cfg_find)}"
+_config_contents="$(cat "${cfg_file}")"
+
+if [ -z "${1}" ]; then
+	2>&1 echo "No command specified"
+	exit 1
+fi
+
+case "$1" in
+	repos)
+		shift
+		cmd_repos "$@"
+		;;
+	clone)
+		shift
+		cmd_clone "$@"
+		;;
+	fetch)
+		shift
+		cmd_fetch "$@"
+		;;
+	*)
+		2>&1 echo "Unknown command: $1"
+		exit 1
+		;;
+esac

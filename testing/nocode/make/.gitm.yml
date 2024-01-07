@@ -1,0 +1,52 @@
+repos:
+  - name: repo1
+    url: git@gitbucket:/test/repo1.git
+    path: /home/test/repositories/repo1
+    uses-lfs: no
+    uses-submodules: no
+  - name: repo2
+    url: git@gitbucket:/test/repo2.git
+    path: /home/test/repositories/repo2
+    uses-lfs: no
+    uses-submodules: no
+  - name: repo3
+    url: git@gitbucket:/test/repo3.git
+    path: /home/test/repositories/repo3
+    uses-lfs: no
+    uses-submodules: no
+  - name: repo4
+    url: git@gitbucket:/test/repo4.git
+    path: /home/test/repositories/repo4
+    uses-lfs: no
+    uses-submodules: no
+  - name: repo5
+    url: git@gitbucket:/test/repo5.git
+    path: /home/test/repositories/repo5
+    uses-lfs: no
+    uses-submodules: no
+
+  - name: repo6
+    url: git@gitbucket:/test/repo6.git
+    path: /home/test/repositories/repo6
+    uses-lfs: yes
+    uses-submodules: no
+  - name: repo7
+    url: git@gitbucket:/test/repo7.git
+    path: /home/test/repositories/repo7
+    uses-lfs: yes
+    uses-submodules: no
+  - name: repo8
+    url: git@gitbucket:/test/repo8.git
+    path: /home/test/repositories/repo8
+    uses-lfs: yes
+    uses-submodules: no
+  - name: repo9
+    url: git@gitbucket:/test/repo9.git
+    path: /home/test/repositories/repo9
+    uses-lfs: yes
+    uses-submodules: no
+  - name: repo10
+    url: git@gitbucket:/test/repo10.git
+    path: /home/test/repositories/repo10
+    uses-lfs: yes
+    uses-submodules: no
