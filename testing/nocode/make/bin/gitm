@@ -116,26 +116,99 @@ cmd_fetch() {
 }
 
 ## startup
+gitm_version="0.0.1"
+
+show_help() {
+	2>&1 echo "Usage: gitm <command> <group> [args]"
+	2>&1 echo "Commands:"
+	2>&1 echo "  repos - list repos"
+	2>&1 echo "  clone - clone repos"
+	2>&1 echo "  fetch - fetch repos"
+	2>&1 echo "Args:"
+	2>&1 echo "  -r|--repo <repo> - specify repo"
+	2>&1 echo "  -g|--group <group> - specify group"
+	2>&1 echo "  -c|--config <file> - specify config file"
+	2>&1 echo "  -h|--help - show help"
+	2>&1 echo "  -v|--version - show version"
+}
+
+# parse args
+debug=0
+command=""
+while [[ $# -gt 0 ]]; do
+	key="$1"
+	case "$key" in
+		--debug)
+			debug=1
+			set -x
+			shift
+			;;
+		-r|--repo)
+			REPO_NAME="$2"
+			shift
+			shift
+			;;
+		-g|--group)
+			GROUP_NAME="$2"
+			shift
+			shift
+			;;
+		-c|--config)
+			CONFIG_FILE="$2"
+			shift
+			shift
+			;;
+		-h|--help)
+			show_help
+			exit 0
+			;;
+		-v|--version)
+			2>&1 echo "gitm version ${gitm_version}"
+			exit 0
+			;;
+		*)
+			if [ -z "${command}" ]; then
+				command="$1"
+				shift
+				continue
+			fi
+
+			if [ -z "${GROUP_NAME}" ]; then
+				GROUP_NAME="$1"
+				shift
+				continue
+			fi
+
+			2>&1 echo "Unknown argument: $key"
+			exit 1
+			;;
+	esac
+done
+
 
 cfg_file="${CONFIG_FILE:-$(cfg_find)}"
 _config_contents="$(cat "${cfg_file}")"
 
-if [ -z "${1}" ]; then
+if [ -z "${command}" ]; then
 	2>&1 echo "No command specified"
 	exit 1
 fi
 
-case "$1" in
+if [ ${debug} -eq 1 ]; then
+	2>&1 echo "Debugging enabled"
+	2>&1 echo "Config file: ${cfg_file}"
+	2>&1 echo "Config contents:"
+	2>&1 echo "${_config_contents}"
+fi
+
+case "${command}" in
 	repos)
-		shift
 		cmd_repos "$@"
 		;;
 	clone)
-		shift
 		cmd_clone "$@"
 		;;
 	fetch)
-		shift
 		cmd_fetch "$@"
 		;;
 	*)
