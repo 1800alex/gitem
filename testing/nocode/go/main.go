@@ -299,6 +299,13 @@ func main() {
 		},
 	)
 
+	// TODO: sync
+	// TODO: checkout
+	// TODO: branch
+	// TODO: commit
+	// TODO: push (with force, and with tags)
+	// TODO: find (find branch, find tag, find commit, find file, find tag that matches regex
+
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
 		os.Exit(1)

@@ -1,4 +1,4 @@
-require-group: true
+require-group: false
 
 logging:
   color: true
