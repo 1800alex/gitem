@@ -23,9 +23,9 @@ vars:
   - name: yamlvar2
     yaml: 'foo: bar'
   - name: user
-    shell: "whoami"
+    shell: "whoami | tr -d '\n'"
   - name: upper
-    shell: "echo {{.stringvar}} | tr '[:lower:]' '[:upper:]'"
+    shell: "echo {{.stringvar}} | tr '[:lower:]' '[:upper:]' | tr -d '\n'"
   - name: var1
     eval: "10"
   - name: var2
