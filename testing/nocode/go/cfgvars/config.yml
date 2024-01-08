@@ -1,0 +1,27 @@
+vars:
+  - name: boolvar
+    bool: true
+  - name: intvar
+    int: 42
+  - name: floatvar
+    float: 3.14
+  - name: stringvar
+    string: "some text"
+  - name: shellvar
+    shell: "id -u"
+  - name: home
+    env: HOME
+  - name: filevar
+    file: "{{.home}}/.gitconfig"
+  - name: jsonvar
+    json: '{"foo": "bar"}'
+  - name: yamlvar
+    yaml: |
+      foo: bar
+      baz: qux
+  - name: yamlvar2
+    yaml: 'foo: bar'
+  - name: user
+    shell: "whoami"
+  - name: upper
+    shell: "echo {{.stringvar}} | tr '[:lower:]' '[:upper:]'"
