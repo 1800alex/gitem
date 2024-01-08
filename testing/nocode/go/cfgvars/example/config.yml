@@ -8,7 +8,7 @@ vars:
   - name: stringvar
     string: "some text"
   - name: shellvar
-    shell: "id -u"
+    shell: "id -u | tr -d '\n'"
   - name: home
     env: HOME
   - name: filevar
@@ -19,9 +19,20 @@ vars:
     yaml: |
       foo: bar
       baz: qux
+      val: 42
   - name: yamlvar2
     yaml: 'foo: bar'
   - name: user
     shell: "whoami"
   - name: upper
     shell: "echo {{.stringvar}} | tr '[:lower:]' '[:upper:]'"
+  - name: var1
+    eval: "10"
+  - name: var2
+    eval: "23 + {{.var1}}"
+  - name: bool1
+    eval: "{{.var1}} > 30"
+  - name: bool2
+    eval: "{{.bool1}} && {{.var1}} < 50"
+  - name: var3
+    eval: "{{.yamlvar.val}} + 1"

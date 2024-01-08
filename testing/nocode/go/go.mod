@@ -1,8 +1,9 @@
 module gitm
 
-go 1.20
+go 1.19
 
 require (
+	github.com/Knetic/govaluate v3.0.0+incompatible
 	github.com/spf13/cobra v1.8.0
 	gopkg.in/yaml.v2 v2.4.0
 )
