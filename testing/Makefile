@@ -4,7 +4,7 @@ TARGETS:=all bootstrap build clean up down logs help testclient
 
 .DEFAULT_GOAL:=all
 
-all: build
+all: help
 
 bootstrap:
 	@echo "Bootstrapping test environment..."

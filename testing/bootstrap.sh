@@ -21,3 +21,9 @@ sed -i \
 
 mkdir -p multi/gitea/conf
 cp multi/app.ini multi/gitea/conf/app.ini
+
+mkdir -p multi/soft-serve/
+cp multi/soft-serve.yml.example multi/soft-serve/config.yaml
+sed -i \
+    -e "s#SSH-KEY-HERE#${SSH_KEY}#g" \
+    multi/soft-serve/config.yaml
