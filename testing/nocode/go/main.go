@@ -99,88 +99,6 @@ func (gitm *Gitm) cmdWorker(maxWorkers int, f func(context.Context, RepoConfig) 
 	return worker.Run(ctx)
 }
 
-func (gitm *Gitm) cmdClone(cmd *cobra.Command, args []string) error {
-	return gitm.cmdWorker(gitm.maxWorkers, func(ctx context.Context, repoConfig RepoConfig) error {
-		return gitm.cmdCloneRepo(ctx, repoConfig)
-	})
-}
-
-func (gitm *Gitm) cmdCloneRepo(ctx context.Context, repoConfig RepoConfig) error {
-	if _, err := os.Stat(repoConfig.Path); err == nil {
-		if err := gitm.runCommandWithOutputFormatting(ctx, "git", []string{"-C", repoConfig.Path, "pull"}); err != nil {
-			return fmt.Errorf("Failed to pull repo: %v", err)
-		}
-
-	} else {
-		if err := gitm.runCommandWithOutputFormatting(ctx, "git", []string{"clone", repoConfig.URL, repoConfig.Path}); err != nil {
-			return fmt.Errorf("Failed to clone repo: %v", err)
-		}
-	}
-
-	if repoConfig.UsesLFS {
-		if err := gitm.runCommandWithOutputFormatting(ctx, "git", []string{"-C", repoConfig.Path, "lfs", "install"}); err != nil {
-			return fmt.Errorf("Failed to install lfs repo: %v", err)
-		}
-	}
-
-	if repoConfig.UsesSubrepos {
-		if err := gitm.runCommandWithOutputFormatting(ctx, "git", []string{"-C", repoConfig.Path, "submodule", "update", "--init", "--recursive"}); err != nil {
-			return fmt.Errorf("Failed to initialize submodules: %v", err)
-		}
-	}
-
-	return nil
-}
-
-func (gitm *Gitm) cmdPull(cmd *cobra.Command, args []string) error {
-	return gitm.cmdWorker(gitm.maxWorkers, func(ctx context.Context, repoConfig RepoConfig) error {
-		return gitm.cmdPullRepo(ctx, repoConfig)
-	})
-}
-
-func (gitm *Gitm) cmdPullRepo(ctx context.Context, repoConfig RepoConfig) error {
-	if _, err := os.Stat(repoConfig.Path); err == nil {
-		if err := gitm.runCommandWithOutputFormatting(ctx, "git", []string{"-C", repoConfig.Path, "pull"}); err != nil {
-			return fmt.Errorf("Failed to pull repo: %v", err)
-		}
-
-		if repoConfig.UsesLFS {
-			if err := gitm.runCommandWithOutputFormatting(ctx, "git", []string{"-C", repoConfig.Path, "lfs", "pull"}); err != nil {
-				return fmt.Errorf("Failed to pull lfs repo: %v", err)
-			}
-		}
-
-		if repoConfig.UsesSubrepos {
-			if err := gitm.runCommandWithOutputFormatting(ctx, "git", []string{"-C", repoConfig.Path, "submodule", "update", "--init", "--recursive"}); err != nil {
-				return fmt.Errorf("Failed to initialize submodules: %v", err)
-			}
-		}
-	} else {
-		return fmt.Errorf("Repo %s does not exist", gitm.repoName)
-	}
-
-	return nil
-}
-
-func (gitm *Gitm) cmdFetch(cmd *cobra.Command, args []string) error {
-	return gitm.cmdWorker(gitm.maxWorkers, func(ctx context.Context, repoConfig RepoConfig) error {
-		return gitm.cmdFetchRepo(ctx, repoConfig)
-	})
-}
-
-func (gitm *Gitm) cmdFetchRepo(ctx context.Context, repoConfig RepoConfig) error {
-	if _, err := os.Stat(repoConfig.Path); err == nil {
-		err := gitm.runCommandWithOutputFormatting(ctx, "git", []string{"-C", repoConfig.Path, "fetch"})
-		if err != nil {
-			return fmt.Errorf("Failed to fetch repo: %v", err)
-		}
-	} else {
-		return fmt.Errorf("Repo %s does not exist", gitm.repoName)
-	}
-
-	return nil
-}
-
 func (gitm *Gitm) cmdStatus(cmd *cobra.Command, args []string) error {
 	return gitm.cmdWorker(1, func(ctx context.Context, repoConfig RepoConfig) error {
 		return gitm.cmdStatusRepo(ctx, repoConfig)
@@ -189,10 +107,13 @@ func (gitm *Gitm) cmdStatus(cmd *cobra.Command, args []string) error {
 
 func (gitm *Gitm) cmdStatusRepo(ctx context.Context, repoConfig RepoConfig) error {
 	if _, err := os.Stat(repoConfig.Path); err == nil {
-		err := gitm.runCommandWithOutputFormatting(ctx, "git", []string{"-C", repoConfig.Path, "status"})
+		res, err := gitm.RunCommandAndCaptureOutput(ctx, "git", []string{"-C", repoConfig.Path, "status"})
 		if err != nil {
 			return fmt.Errorf("Failed to get repo status: %v", err)
 		}
+
+		fmt.Printf("%s\n", res.Stdout)
+
 	} else {
 		return fmt.Errorf("Repo %s does not exist", gitm.repoName)
 	}
@@ -210,6 +131,10 @@ func cmdHelp(cmd *cobra.Command, args []string) {
 	cmd.Usage()
 }
 
+type GitmCommand interface {
+	Init(gitm *Gitm, cmd *cobra.Command) error
+}
+
 func main() {
 	var rootCmd = &cobra.Command{Use: "gitm"}
 	var gitm Gitm
@@ -219,6 +144,9 @@ func main() {
 	rootCmd.PersistentFlags().StringVarP(&gitm.groupName, "group", "g", "", "Specify group")
 	rootCmd.PersistentFlags().BoolVarP(&gitm.debugMode, "debug", "", false, "Enable debug mode")
 	rootCmd.PersistentFlags().IntVarP(&gitm.maxWorkers, "max-workers", "", 0, "Specify max workers (default: number of CPUs)")
+
+	find := Find{}
+	find.Init(&gitm, rootCmd)
 
 	rootCmd.AddCommand(
 		&cobra.Command{
