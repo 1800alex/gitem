@@ -162,6 +162,7 @@ for i in $(seq 1 5); do
 			printf "# repo$i\n\nCommit: $j" > README.md
 			git add README.md
 			git commit -m "repo$i commit $j"
+			sleep 1 # sleep so that our tags have unique dates
 			git tag "v0.0.$j"
 		done
 
@@ -205,6 +206,7 @@ for i in $(seq 6 10); do
 		git add file.bin file.bin.md5
 		git commit -m "repo$i lfs commit 2"
 		git push
+		sleep 1 # sleep so that our tags have unique dates
 		git tag "v0.0.1"
 		git push --tags
 	)
@@ -229,6 +231,7 @@ for i in $(seq 1 5); do
 			printf "# icecream$i\n\nCommit: $j" > README.md
 			git add README.md
 			git commit -m "icecream$i commit $j"
+			sleep 1 # sleep so that our tags have unique dates
 			git tag "v0.0.$j"
 		done
 
@@ -272,6 +275,7 @@ for i in $(seq 6 10); do
 		git add file.bin file.bin.md5
 		git commit -m "icecream$i lfs commit 2"
 		git push
+		sleep 1 # sleep so that our tags have unique dates
 		git tag "v0.0.1"
 		git push --tags
 	)
@@ -342,6 +346,7 @@ EOF
 				printf "# repo$i\n\nCommit: $j" > README.md
 				git add README.md
 				git commit -m "repo$i commit $j"
+				sleep 1 # sleep so that our tags have unique dates
 				git tag "v0.0.$j"
 			done
 
@@ -378,6 +383,7 @@ EOF
 				printf "# repo$i\n\nLFS file" > README.md
 				git add .lfsconfig README.md
 				git commit -m "repo$i commit 1"
+				sleep 1 # sleep so that our tags have unique dates
 				git tag "v0.0.1"
 
 				git remote add origin git@cgit:/repo$i.git
