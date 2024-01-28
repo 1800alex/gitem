@@ -34,10 +34,13 @@ func (gitm *Gitm) Load(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("Failed to load config: %v", err)
 	}
 
-	if gitm.groupName == "" && len(args) > 0 {
-		gitm.groupName = args[0]
-		args = args[1:]
-	}
+	// TODO: How do I know if the user passed in "--", cobra seems to remove it from args so we can't check for it
+
+	// TODO: If we want to pass the group name as the first argument, we need to somehow make cobra aware of this
+	// if gitm.groupName == "" && len(args) > 0 && args[0] != "--" {
+	// 	gitm.groupName = args[0]
+	// 	args = args[1:]
+	// }
 
 	// Print cobra options
 	if gitm.debugMode {
@@ -147,6 +150,9 @@ func main() {
 
 	find := Find{}
 	find.Init(&gitm, rootCmd)
+
+	tag := Tag{}
+	tag.Init(&gitm, rootCmd)
 
 	rootCmd.AddCommand(
 		&cobra.Command{
