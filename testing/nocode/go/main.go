@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/spf13/cobra"
 
@@ -29,6 +30,29 @@ func cmdHelp(cmd *cobra.Command, args []string) {
 	cmd.Usage()
 }
 
+func createSubcommands(rootCmd *cobra.Command) {
+	// Create subcommands here based on AppConfig or any other dynamic logic
+	subCmd1 := &cobra.Command{
+		Use:   "subcommand1",
+		Short: "Subcommand 1",
+		Run: func(cmd *cobra.Command, args []string) {
+			// Subcommand 1 logic using AppConfig
+			fmt.Println("Subcommand 1 with args: ", args)
+		},
+	}
+
+	subCmd2 := &cobra.Command{
+		Use:   "subcommand2",
+		Short: "Subcommand 2",
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Println("Subcommand 2 with args: ", args)
+		},
+	}
+
+	// Add subcommands to the root command
+	rootCmd.AddCommand(subCmd1, subCmd2)
+}
+
 func main() {
 	var opts gitm.GitmOptions
 	gitmObj := gitm.New(opts)
@@ -36,12 +60,50 @@ func main() {
 	var rootCmd *cobra.Command
 	rootCmd = &cobra.Command{
 		Use: "gitm",
-		PersistentPreRun: func(cmd *cobra.Command, args []string) {
-			if err := gitmObj.Init(&opts, cmd, args); err != nil {
-				fmt.Fprintf(os.Stderr, "%v\n", err)
-				os.Exit(1)
-			}
-		},
+		// PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		// 	if err := gitmObj.Init(&opts, cmd, args); err != nil {
+		// 		fmt.Fprintf(os.Stderr, "%v\n", err)
+		// 		os.Exit(1)
+		// 	}
+		// },
+	}
+
+	// Check if GITM_CONFIG is set and use it as the config file
+	if configFile, ok := os.LookupEnv("GITM_CONFIG"); ok {
+		opts.ConfigFile = configFile
+	}
+
+	// Check if GITM_DEBUG is set and use it as the debug mode
+	if debugMode, ok := os.LookupEnv("GITM_DEBUG"); ok {
+		opts.DebugMode = debugMode == "true"
+	}
+
+	// Check if GITM_MAX_WORKERS is set and use it as the max workers
+	if maxWorkers, ok := os.LookupEnv("GITM_MAX_WORKERS"); ok {
+		// Parse the max workers as an int
+		maxWorkersInt, err := strconv.Atoi(maxWorkers)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to parse GITM_MAX_WORKERS: %v\n", err)
+			os.Exit(1)
+		}
+
+		opts.MaxWorkers = maxWorkersInt
+	}
+
+	// Check if GITM_REPO is set and use it as the repo name
+	if repoName, ok := os.LookupEnv("GITM_REPO"); ok {
+		opts.RepoName = repoName
+	}
+
+	// Check if GITM_GROUP is set and use it as the group name
+	if groupName, ok := os.LookupEnv("GITM_GROUP"); ok {
+		opts.GroupName = groupName
+	}
+
+	// Go ahead and load the config file and set the config
+	if err := gitmObj.Init(&opts, rootCmd, []string{}); err != nil {
+		fmt.Fprintf(os.Stderr, "%v\n", err)
+		os.Exit(1)
 	}
 
 	rootCmd.PersistentFlags().StringVarP(&opts.ConfigFile, "config", "c", "", "Specify config file")

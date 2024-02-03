@@ -22,22 +22,36 @@ commands:
     command: "git status"
     group:
       - all
-      - gitbucket
-      - softserve
   - name: log
     description: "Show the commit logs"
     command: "git log"
     group:
       - all
-      - gitbucket
-      - softserve
   - name: fetch
     description: "Fetch from the remote repository"
     command: "git fetch"
     group:
       - all
-      - gitbucket
-      - softserve
+  - name: pull
+    description: "Pull from the remote repository"
+    command: "git pull"
+    group:
+      - all
+  - name: push
+    description: "Push to the remote repository"
+    command: "git push"
+    group:
+      - all
+  - name: newest
+    description: "Show the newest commit"
+    command: "git log -1"
+    group:
+      - all
+  - name: newest-tag
+    description: "Show the newest tag"
+    command: "git tag --sort=-v:refname | head -n 1"
+    group:
+      - all
 
 repos:
   - name: repo1

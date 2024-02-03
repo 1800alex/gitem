@@ -23,7 +23,7 @@ func (c *Cmd) cmdRun(cmd *cobra.Command, command gitm.CommandConfig, args []stri
 
 func (c *Cmd) cmdRunRepo(ctx context.Context, repoConfig gitm.RepoConfig, command gitm.CommandConfig, args []string) error {
 	cmdArgs := []string{"sh", "-c", command.Command}
-	cmdArgs = append(cmdArgs, args[1:]...)
+	cmdArgs = append(cmdArgs, args...)
 
 	allowed := false
 	if len(command.Group) == 0 {
@@ -81,19 +81,26 @@ func New(gitm *gitm.Gitm, opts *gitm.GitmOptions, root *cobra.Command) *Cmd {
 		Use:   "run",
 		Short: "Runs a command",
 		Run: func(cmd *cobra.Command, args []string) {
-			for _, command := range c.gitm.Config.Commands {
-				if command.Name == args[0] {
-					if err := c.cmdRun(cmd, command, args); err != nil {
-						fmt.Fprintf(os.Stderr, "%v\n", err)
-						os.Exit(1)
-					}
-
-					return
-				}
-			}
 			fmt.Fprintf(os.Stderr, "Command not found: %s\n", args[0])
+			cmd.Usage()
 			os.Exit(1)
 		},
+	}
+
+	for _, command := range c.gitm.Config.Commands {
+		runCmd.AddCommand(&cobra.Command{
+			Use:   command.Name,
+			Short: command.Description,
+			Run: func(cmd *cobra.Command, args []string) {
+				fmt.Println("Running command: ", command.Name, " with args: ", args)
+				if err := c.cmdRun(cmd, command, args); err != nil {
+					fmt.Fprintf(os.Stderr, "%v\n", err)
+					os.Exit(1)
+				}
+
+				return
+			},
+		})
 	}
 
 	c.root.AddCommand(&runCmd)
