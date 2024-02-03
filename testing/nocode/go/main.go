@@ -11,6 +11,7 @@ import (
 	"gitm/commands/clone"
 	"gitm/commands/fetch"
 	"gitm/commands/find"
+	"gitm/commands/foreach"
 	"gitm/commands/pull"
 	"gitm/commands/repos"
 	"gitm/commands/status"
@@ -46,6 +47,7 @@ func main() {
 	find.New(gitmObj, &opts, rootCmd)
 	tag.New(gitmObj, &opts, rootCmd)
 	repos.New(gitmObj, &opts, rootCmd)
+	foreach.New(gitmObj, &opts, rootCmd)
 
 	rootCmd.AddCommand(
 		&cobra.Command{
