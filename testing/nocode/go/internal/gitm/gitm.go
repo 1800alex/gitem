@@ -9,7 +9,8 @@ import (
 
 // Gitm is the main object for gitm
 type Gitm struct {
-	config *GitmConfig
+	// Config is the config object
+	Config *GitmConfig
 
 	maxWorkers int
 	configFile string
@@ -49,7 +50,7 @@ func (gitm *Gitm) Load(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("Failed to find config file: %v", err)
 		}
 	}
-	gitm.config, err = loadConfig(gitm.configFile)
+	gitm.Config, err = loadConfig(gitm.configFile)
 	if err != nil {
 		return fmt.Errorf("Failed to load config: %v", err)
 	}
@@ -69,11 +70,11 @@ func (gitm *Gitm) Load(cmd *cobra.Command, args []string) error {
 		fmt.Printf("groupName: %s\n", gitm.groupName)
 		fmt.Printf("debugMode: %v\n", gitm.debugMode)
 		fmt.Printf("maxWorkers: %d\n", gitm.maxWorkers)
-		fmt.Printf("config: %#v\n", gitm.config)
+		fmt.Printf("config: %#v\n", gitm.Config)
 		fmt.Printf("args: %#v\n", args)
 	}
 
-	if gitm.groupName == "" && gitm.config.RequireGroup != nil && *gitm.config.RequireGroup {
+	if gitm.groupName == "" && gitm.Config.RequireGroup != nil && *gitm.Config.RequireGroup {
 		return fmt.Errorf("Group name is required when require-group is set to true")
 	}
 

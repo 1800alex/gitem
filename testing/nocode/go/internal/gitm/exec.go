@@ -46,13 +46,13 @@ func ColorStringToShellEscape(colorString string) string {
 func (gitm *Gitm) LogTimestamp() string {
 	msg := ""
 
-	if gitm.config.Logging.Timestamps != nil && false == *gitm.config.Logging.Timestamps {
+	if gitm.Config.Logging.Timestamps != nil && false == *gitm.Config.Logging.Timestamps {
 		return msg
 	}
 
-	if gitm.config.Logging.Color == nil || true == *gitm.config.Logging.Color {
-		if gitm.config.Logging.TimestampColor != nil {
-			msg += ColorStringToShellEscape(*gitm.config.Logging.TimestampColor)
+	if gitm.Config.Logging.Color == nil || true == *gitm.Config.Logging.Color {
+		if gitm.Config.Logging.TimestampColor != nil {
+			msg += ColorStringToShellEscape(*gitm.Config.Logging.TimestampColor)
 		} else {
 			msg += shellColorBlue
 		}
@@ -60,7 +60,7 @@ func (gitm *Gitm) LogTimestamp() string {
 
 	msg += fmt.Sprintf("[%s]", time.Now().Format("2006-01-02 15:04:05.000"))
 
-	if gitm.config.Logging.Color == nil || true == *gitm.config.Logging.Color {
+	if gitm.Config.Logging.Color == nil || true == *gitm.Config.Logging.Color {
 		msg += shellColorReset
 	}
 
@@ -70,13 +70,13 @@ func (gitm *Gitm) LogTimestamp() string {
 func (gitm *Gitm) LogCommand(command string, args []string) string {
 	msg := ""
 
-	if gitm.config.Logging.Commands != nil && false == *gitm.config.Logging.Commands {
+	if gitm.Config.Logging.Commands != nil && false == *gitm.Config.Logging.Commands {
 		return msg
 	}
 
-	if gitm.config.Logging.Color == nil || true == *gitm.config.Logging.Color {
-		if gitm.config.Logging.CommandColor != nil {
-			msg += ColorStringToShellEscape(*gitm.config.Logging.CommandColor)
+	if gitm.Config.Logging.Color == nil || true == *gitm.Config.Logging.Color {
+		if gitm.Config.Logging.CommandColor != nil {
+			msg += ColorStringToShellEscape(*gitm.Config.Logging.CommandColor)
 		} else {
 			msg += shellColorCyan
 		}
@@ -87,7 +87,7 @@ func (gitm *Gitm) LogCommand(command string, args []string) string {
 	joined := append([]string{command}, args...)
 	msg += "[" + strings.Join(joined, " ") + "]"
 
-	if gitm.config.Logging.Color == nil || true == *gitm.config.Logging.Color {
+	if gitm.Config.Logging.Color == nil || true == *gitm.Config.Logging.Color {
 		msg += shellColorReset
 	}
 
@@ -126,11 +126,11 @@ func (gitm *Gitm) RunCommandWithOutputFormatting(ctx context.Context, command st
 
 	commandString := gitm.LogCommand(command, args)
 
-	if gitm.config.Logging.Begin == nil || true == *gitm.config.Logging.Begin {
+	if gitm.Config.Logging.Begin == nil || true == *gitm.Config.Logging.Begin {
 		beginString := ""
-		if gitm.config.Logging.Color == nil || true == *gitm.config.Logging.Color {
-			if gitm.config.Logging.BeginColor != nil {
-				beginString += ColorStringToShellEscape(*gitm.config.Logging.BeginColor)
+		if gitm.Config.Logging.Color == nil || true == *gitm.Config.Logging.Color {
+			if gitm.Config.Logging.BeginColor != nil {
+				beginString += ColorStringToShellEscape(*gitm.Config.Logging.BeginColor)
 			} else {
 				beginString += shellColorWhite
 			}
@@ -138,7 +138,7 @@ func (gitm *Gitm) RunCommandWithOutputFormatting(ctx context.Context, command st
 
 		beginString += "[running]"
 
-		if gitm.config.Logging.Color == nil || true == *gitm.config.Logging.Color {
+		if gitm.Config.Logging.Color == nil || true == *gitm.Config.Logging.Color {
 			beginString += shellColorReset
 		}
 
@@ -165,10 +165,10 @@ func (gitm *Gitm) RunCommandWithOutputFormatting(ctx context.Context, command st
 	duration := time.Since(startTime)
 	var durationString string
 
-	if gitm.config.Logging.Duration == nil || true == *gitm.config.Logging.Duration {
-		if gitm.config.Logging.Color == nil || true == *gitm.config.Logging.Color {
-			if gitm.config.Logging.DurationColor != nil {
-				durationString += ColorStringToShellEscape(*gitm.config.Logging.DurationColor)
+	if gitm.Config.Logging.Duration == nil || true == *gitm.Config.Logging.Duration {
+		if gitm.Config.Logging.Color == nil || true == *gitm.Config.Logging.Color {
+			if gitm.Config.Logging.DurationColor != nil {
+				durationString += ColorStringToShellEscape(*gitm.Config.Logging.DurationColor)
 			} else {
 				durationString += shellColorMagenta
 			}
@@ -192,7 +192,7 @@ func (gitm *Gitm) RunCommandWithOutputFormatting(ctx context.Context, command st
 
 		durationString += "]"
 
-		if gitm.config.Logging.Color == nil || true == *gitm.config.Logging.Color {
+		if gitm.Config.Logging.Color == nil || true == *gitm.Config.Logging.Color {
 			durationString += shellColorReset
 		}
 	}
@@ -218,15 +218,15 @@ func (gitm *Gitm) FormatAndPrintLines(streamType int, command string, r io.Reade
 		var streamPrefix string
 
 		if streamType == 1 {
-			if gitm.config.Logging.StdoutPrefix != nil {
-				streamPrefix = *gitm.config.Logging.StdoutPrefix
+			if gitm.Config.Logging.StdoutPrefix != nil {
+				streamPrefix = *gitm.Config.Logging.StdoutPrefix
 			} else {
 				streamPrefix = "[stdout] "
 			}
 
-			if gitm.config.Logging.Color == nil || true == *gitm.config.Logging.Color {
-				if gitm.config.Logging.StdoutColor != nil {
-					lineColor = ColorStringToShellEscape(*gitm.config.Logging.StdoutColor)
+			if gitm.Config.Logging.Color == nil || true == *gitm.Config.Logging.Color {
+				if gitm.Config.Logging.StdoutColor != nil {
+					lineColor = ColorStringToShellEscape(*gitm.Config.Logging.StdoutColor)
 				} else {
 					lineColor = shellColorWhite
 				}
@@ -234,15 +234,15 @@ func (gitm *Gitm) FormatAndPrintLines(streamType int, command string, r io.Reade
 				colorReset = shellColorReset
 			}
 		} else if streamType == 2 {
-			if gitm.config.Logging.StdoutPrefix != nil {
-				streamPrefix = *gitm.config.Logging.StdoutPrefix
+			if gitm.Config.Logging.StdoutPrefix != nil {
+				streamPrefix = *gitm.Config.Logging.StdoutPrefix
 			} else {
 				streamPrefix = "[stderr] "
 			}
 
-			if gitm.config.Logging.Color == nil || true == *gitm.config.Logging.Color {
-				if gitm.config.Logging.StderrColor != nil {
-					lineColor = ColorStringToShellEscape(*gitm.config.Logging.StderrColor)
+			if gitm.Config.Logging.Color == nil || true == *gitm.Config.Logging.Color {
+				if gitm.Config.Logging.StderrColor != nil {
+					lineColor = ColorStringToShellEscape(*gitm.Config.Logging.StderrColor)
 				} else {
 					lineColor = shellColorRed
 				}
@@ -253,7 +253,7 @@ func (gitm *Gitm) FormatAndPrintLines(streamType int, command string, r io.Reade
 		}
 
 		gitm.logMutex.Lock()
-		if gitm.config.Logging.StderrRedirect != nil && true == *gitm.config.Logging.StderrRedirect {
+		if gitm.Config.Logging.StderrRedirect != nil && true == *gitm.Config.Logging.StderrRedirect {
 			fmt.Printf("%s%s%s%s%s%s\n", gitm.LogTimestamp(), command, lineColor, streamPrefix, line, colorReset)
 		} else {
 			fmt.Fprintf(os.Stderr, "%s%s%s%s%s%s\n", gitm.LogTimestamp(), command, lineColor, streamPrefix, line, colorReset)

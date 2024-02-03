@@ -12,17 +12,10 @@ import (
 	"gitm/commands/fetch"
 	"gitm/commands/find"
 	"gitm/commands/pull"
+	"gitm/commands/repos"
 	"gitm/commands/status"
 	"gitm/commands/tag"
 )
-
-// func (gitm *Gitm) cmdRepos(cmd *cobra.Command, args []string) error {
-// 	for _, repo := range gitm.config.Repos {
-// 		fmt.Println(repo.Name)
-// 	}
-
-// 	return nil
-// }
 
 // commit will need a way to present the user with a list of files that have changed which means parsing the output of git status
 
@@ -52,23 +45,9 @@ func main() {
 	pull.New(gitmObj, &opts, rootCmd)
 	find.New(gitmObj, &opts, rootCmd)
 	tag.New(gitmObj, &opts, rootCmd)
+	repos.New(gitmObj, &opts, rootCmd)
 
 	rootCmd.AddCommand(
-		// &cobra.Command{
-		// 	Use:   "repos",
-		// 	Short: "List repos",
-		// 	Run: func(cmd *cobra.Command, args []string) {
-		// 		if err := gitmObj.Load(cmd, args); err != nil {
-		// 			fmt.Fprintf(os.Stderr, "%v\n", err)
-		// 			os.Exit(1)
-		// 		}
-
-		// 		if err := gitmObj.cmdRepos(cmd, args); err != nil {
-		// 			fmt.Fprintf(os.Stderr, "%v\n", err)
-		// 			os.Exit(1)
-		// 		}
-		// 	},
-		// },
 		&cobra.Command{
 			Use:   "version",
 			Short: "Show version",

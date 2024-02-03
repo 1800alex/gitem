@@ -18,11 +18,11 @@ func (gitm *Gitm) NewWorker(maxWorkers int, f func(context.Context, RepoConfig) 
 
 	w := worker.NewWorker(maxWorkers, false)
 
-	for i, _ := range gitm.config.Repos {
+	for i, _ := range gitm.Config.Repos {
 		ok := true
 		if gitm.groupName != "" {
 			ok = false
-			for _, group := range gitm.config.Repos[i].Group {
+			for _, group := range gitm.Config.Repos[i].Group {
 				if group == gitm.groupName {
 					ok = true
 				}
@@ -31,7 +31,7 @@ func (gitm *Gitm) NewWorker(maxWorkers int, f func(context.Context, RepoConfig) 
 
 		if gitm.repoName != "" {
 			ok = false
-			if gitm.config.Repos[i].Name == gitm.repoName {
+			if gitm.Config.Repos[i].Name == gitm.repoName {
 				ok = true
 			}
 		}
@@ -39,7 +39,7 @@ func (gitm *Gitm) NewWorker(maxWorkers int, f func(context.Context, RepoConfig) 
 		if !ok {
 			continue
 		}
-		repoConfig := gitm.config.Repos[i]
+		repoConfig := gitm.Config.Repos[i]
 		f(ctx, repoConfig)
 	}
 
