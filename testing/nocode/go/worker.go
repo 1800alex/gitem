@@ -2,78 +2,46 @@ package main
 
 import (
 	"context"
-	"runtime"
-	"sync"
-
-	"gitm/workerpool"
+	"gitm/worker"
 )
 
-type Worker struct {
-	wg     sync.WaitGroup
-	mu     sync.Mutex
-	ctx    context.Context
-	cancel context.CancelFunc
+// NewWorker will create a new worker and run the function f
+// The function f will be called for each repo
+// If maxWorkers is less than 1, the number of workers will be set to gitm.MaxWorkers()
+func (gitm *Gitm) NewWorker(maxWorkers int, f func(context.Context, RepoConfig) error) error {
+	ctx, cancel := GetOSContext()
+	defer cancel()
 
-	queue []func(context.Context) error
-
-	pool *workerpool.WorkerPool[struct{}]
-}
-
-func NewWorker(max int, failFast bool) *Worker {
-	if max <= 0 {
-		// Use number of CPUs
-		max = runtime.NumCPU()
+	if maxWorkers < 1 {
+		maxWorkers = gitm.MaxWorkers()
 	}
 
-	return &Worker{
-		pool: workerpool.Go[struct{}](max, failFast),
-	}
-}
+	w := worker.NewWorker(maxWorkers, false)
 
-func (p *Worker) Run(ctx context.Context) error {
-	p.ctx, p.cancel = context.WithCancel(ctx)
-
-	go func() {
-		// Add jobs to the worker pool.
-		for i, _ := range p.queue {
-			if p.ctx.Err() != nil {
-				break
-			}
-
-			fn := p.queue[i]
-			p.pool.AddJob(func() (struct{}, error) {
-				if p.ctx.Err() != nil {
-					return struct{}{}, p.ctx.Err()
+	for i, _ := range gitm.config.Repos {
+		ok := true
+		if gitm.groupName != "" {
+			ok = false
+			for _, group := range gitm.config.Repos[i].Group {
+				if group == gitm.groupName {
+					ok = true
 				}
-
-				err := fn(p.ctx)
-				return struct{}{}, err
-			})
-		}
-
-		p.pool.Done()
-	}()
-
-	// Process results
-	var err error
-	for result := range p.pool.Results() {
-		if result.Err != nil {
-			if nil == err {
-				err = result.Err
 			}
 		}
+
+		if gitm.repoName != "" {
+			ok = false
+			if gitm.config.Repos[i].Name == gitm.repoName {
+				ok = true
+			}
+		}
+
+		if !ok {
+			continue
+		}
+		repoConfig := gitm.config.Repos[i]
+		f(ctx, repoConfig)
 	}
-	p.pool.Wait()
-	return err
-}
 
-func (p *Worker) Stop() {
-	p.cancel()
-}
-
-func (p *Worker) Add(f func(context.Context) error) {
-	p.mu.Lock()
-	defer p.mu.Unlock()
-
-	p.queue = append(p.queue, f)
+	return w.Run(ctx)
 }

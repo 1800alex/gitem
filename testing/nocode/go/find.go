@@ -11,20 +11,27 @@ import (
 	"github.com/spf13/cobra"
 )
 
+type FindCmd struct {
+	gitm *Gitm
+	root *cobra.Command
+
+	opts FindOpts
+}
+
 type FindOpts struct {
 	Search *regexp.Regexp
 	Oldest bool
 }
 
-func (f *Find) cmdFindTag(cmd *cobra.Command, args []string) error {
-	return f.gitm.cmdWorker(f.gitm.maxWorkers, func(ctx context.Context, repoConfig RepoConfig) error {
-		return f.cmdFindTagRepo(ctx, repoConfig)
+func (c *FindCmd) cmdFindTag(cmd *cobra.Command, args []string) error {
+	return c.gitm.NewWorker(0, func(ctx context.Context, repoConfig RepoConfig) error {
+		return c.cmdFindTagRepo(ctx, repoConfig)
 	})
 }
 
 // TODO make this output a struct instead of writing to stdout
 
-func (f *Find) cmdFindTagRepo(ctx context.Context, repoConfig RepoConfig) error {
+func (c *FindCmd) cmdFindTagRepo(ctx context.Context, repoConfig RepoConfig) error {
 	if _, err := os.Stat(repoConfig.Path); err == nil {
 		// TODO which one to use?
 		// -sort=committerdate
@@ -36,7 +43,7 @@ func (f *Find) cmdFindTagRepo(ctx context.Context, repoConfig RepoConfig) error 
 		cmdArgs = append(cmdArgs, "--format=%(refname) %(creatordate)")
 		cmdArgs = append(cmdArgs, "refs/tags")
 
-		res, err := f.gitm.RunCommandAndCaptureOutput(ctx, "git", cmdArgs)
+		res, err := c.gitm.RunCommandAndCaptureOutput(ctx, "git", cmdArgs)
 		if err != nil {
 			return fmt.Errorf("Failed to search repo: %v", err)
 		}
@@ -46,7 +53,7 @@ func (f *Find) cmdFindTagRepo(ctx context.Context, repoConfig RepoConfig) error 
 		var date time.Time
 
 		for _, line := range res.Stdout {
-			if f.opts.Search.MatchString(line) {
+			if c.opts.Search.MatchString(line) {
 				// parse line 'refs/tags/v0.0.1 Sun Jan 28 11:10:14 2024 +0000'
 				tag = strings.TrimPrefix(strings.Split(line, " ")[0], "refs/tags/")
 				dateStr := strings.Join(strings.Split(line, " ")[1:], " ")
@@ -59,7 +66,7 @@ func (f *Find) cmdFindTagRepo(ctx context.Context, repoConfig RepoConfig) error 
 
 				found = true
 
-				if f.opts.Oldest {
+				if c.opts.Oldest {
 					// Oldest tag is first in list
 					break
 				}
@@ -67,29 +74,20 @@ func (f *Find) cmdFindTagRepo(ctx context.Context, repoConfig RepoConfig) error 
 		}
 
 		if !found {
-			return fmt.Errorf("Failed to find tag matching regex %s", f.opts.Search.String())
+			return fmt.Errorf("Failed to find tag matching regex %s", c.opts.Search.String())
 		}
 		fmt.Printf("%s: %v: %s\n", repoConfig.Name, date, tag)
 
 	} else {
-		return fmt.Errorf("Repo %s does not exist", f.gitm.repoName)
+		return fmt.Errorf("Repo %s does not exist", c.gitm.repoName)
 	}
 
 	return nil
 }
 
-type Find struct {
-	gitm *Gitm
-	root *cobra.Command
-
-	opts FindOpts
-}
-
-// TODO move this into its own file
-
-func (f *Find) Init(gitm *Gitm, cmd *cobra.Command) error {
-	f.gitm = gitm
-	f.root = cmd
+func (c *FindCmd) Init(gitm *Gitm, cmd *cobra.Command) error {
+	c.gitm = gitm
+	c.root = cmd
 
 	findCmd := cobra.Command{
 		Use:   "find",
@@ -118,14 +116,14 @@ func (f *Find) Init(gitm *Gitm, cmd *cobra.Command) error {
 				os.Exit(1)
 			}
 
-			f.opts.Search = searchRe
+			c.opts.Search = searchRe
 
-			if err := f.gitm.Load(cmd, args); err != nil {
+			if err := c.gitm.Load(cmd, args); err != nil {
 				fmt.Fprintf(os.Stderr, "%v\n", err)
 				os.Exit(1)
 			}
 
-			if err := f.cmdFindTag(cmd, args); err != nil {
+			if err := c.cmdFindTag(cmd, args); err != nil {
 				fmt.Fprintf(os.Stderr, "%v\n", err)
 				os.Exit(1)
 			}
@@ -133,11 +131,11 @@ func (f *Find) Init(gitm *Gitm, cmd *cobra.Command) error {
 	}
 
 	findTagCmd.Flags().StringVarP(&findTagRegexString, "find-tag", "", "", "Specify tag to search for")
-	findTagCmd.Flags().BoolVarP(&f.opts.Oldest, "find-oldest", "", false, "Find oldest tag (default: newest)")
+	findTagCmd.Flags().BoolVarP(&c.opts.Oldest, "find-oldest", "", false, "Find oldest tag (default: newest)")
 
 	findCmd.AddCommand(&findTagCmd)
 
-	f.root.AddCommand(&findCmd)
+	c.root.AddCommand(&findCmd)
 
 	return nil
 }

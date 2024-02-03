@@ -32,7 +32,7 @@ logs:
 	-@cd multi && docker-compose logs -f
 
 testclient:
-	@cd multi && docker-compose exec testclient bash
+	@cd multi && docker-compose exec -w /home/test/nocode/go/ testclient bash
 
 help:
 	@echo "Usage: make [target]"

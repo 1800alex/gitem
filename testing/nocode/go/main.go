@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"sync"
@@ -21,6 +20,7 @@ type Gitm struct {
 	logMutex sync.Mutex
 }
 
+// Load will load the config file and set the config
 func (gitm *Gitm) Load(cmd *cobra.Command, args []string) error {
 	var err error
 	if gitm.configFile == "" {
@@ -60,65 +60,18 @@ func (gitm *Gitm) Load(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+// MaxWorkers will return the number of workers to use
+func (gitm *Gitm) MaxWorkers() int {
+	if gitm.maxWorkers < 1 {
+		return 1
+	}
+
+	return gitm.maxWorkers
+}
+
 func (gitm *Gitm) cmdRepos(cmd *cobra.Command, args []string) error {
 	for _, repo := range gitm.config.Repos {
 		fmt.Println(repo.Name)
-	}
-
-	return nil
-}
-
-func (gitm *Gitm) cmdWorker(maxWorkers int, f func(context.Context, RepoConfig) error) error {
-	ctx, cancel := GetOSContext()
-	defer cancel()
-
-	worker := NewWorker(maxWorkers, false)
-
-	for i, _ := range gitm.config.Repos {
-		ok := true
-		if gitm.groupName != "" {
-			ok = false
-			for _, group := range gitm.config.Repos[i].Group {
-				if group == gitm.groupName {
-					ok = true
-				}
-			}
-		}
-
-		if gitm.repoName != "" {
-			ok = false
-			if gitm.config.Repos[i].Name == gitm.repoName {
-				ok = true
-			}
-		}
-
-		if !ok {
-			continue
-		}
-		repoConfig := gitm.config.Repos[i]
-		f(ctx, repoConfig)
-	}
-
-	return worker.Run(ctx)
-}
-
-func (gitm *Gitm) cmdStatus(cmd *cobra.Command, args []string) error {
-	return gitm.cmdWorker(1, func(ctx context.Context, repoConfig RepoConfig) error {
-		return gitm.cmdStatusRepo(ctx, repoConfig)
-	})
-}
-
-func (gitm *Gitm) cmdStatusRepo(ctx context.Context, repoConfig RepoConfig) error {
-	if _, err := os.Stat(repoConfig.Path); err == nil {
-		res, err := gitm.RunCommandAndCaptureOutput(ctx, "git", []string{"-C", repoConfig.Path, "status"})
-		if err != nil {
-			return fmt.Errorf("Failed to get repo status: %v", err)
-		}
-
-		fmt.Printf("%s\n", res.Stdout)
-
-	} else {
-		return fmt.Errorf("Repo %s does not exist", gitm.repoName)
 	}
 
 	return nil
@@ -134,6 +87,7 @@ func cmdHelp(cmd *cobra.Command, args []string) {
 	cmd.Usage()
 }
 
+// GitmCommand is an interface for gitm commands
 type GitmCommand interface {
 	Init(gitm *Gitm, cmd *cobra.Command) error
 }
@@ -148,11 +102,21 @@ func main() {
 	rootCmd.PersistentFlags().BoolVarP(&gitm.debugMode, "debug", "", false, "Enable debug mode")
 	rootCmd.PersistentFlags().IntVarP(&gitm.maxWorkers, "max-workers", "", 0, "Specify max workers (default: number of CPUs)")
 
-	find := Find{}
-	find.Init(&gitm, rootCmd)
+	cmds := []GitmCommand{
+		&PullCmd{},
+		&TagCmd{},
+		&CloneCmd{},
+		&FetchCmd{},
+		&StatusCmd{},
+		&FindCmd{},
+	}
 
-	tag := Tag{}
-	tag.Init(&gitm, rootCmd)
+	for _, cmd := range cmds {
+		if err := cmd.Init(&gitm, rootCmd); err != nil {
+			fmt.Fprintf(os.Stderr, "%v\n", err)
+			os.Exit(1)
+		}
+	}
 
 	rootCmd.AddCommand(
 		&cobra.Command{
@@ -165,66 +129,6 @@ func main() {
 				}
 
 				if err := gitm.cmdRepos(cmd, args); err != nil {
-					fmt.Fprintf(os.Stderr, "%v\n", err)
-					os.Exit(1)
-				}
-			},
-		},
-		&cobra.Command{
-			Use:   "clone",
-			Short: "Clone repos",
-			Run: func(cmd *cobra.Command, args []string) {
-				if err := gitm.Load(cmd, args); err != nil {
-					fmt.Fprintf(os.Stderr, "%v\n", err)
-					os.Exit(1)
-				}
-
-				if err := gitm.cmdClone(cmd, args); err != nil {
-					fmt.Fprintf(os.Stderr, "%v\n", err)
-					os.Exit(1)
-				}
-			},
-		},
-		&cobra.Command{
-			Use:   "pull",
-			Short: "Pull repos",
-			Run: func(cmd *cobra.Command, args []string) {
-				if err := gitm.Load(cmd, args); err != nil {
-					fmt.Fprintf(os.Stderr, "%v\n", err)
-					os.Exit(1)
-				}
-
-				if err := gitm.cmdPull(cmd, args); err != nil {
-					fmt.Fprintf(os.Stderr, "%v\n", err)
-					os.Exit(1)
-				}
-			},
-		},
-		&cobra.Command{
-			Use:   "fetch",
-			Short: "Fetch repos",
-			Run: func(cmd *cobra.Command, args []string) {
-				if err := gitm.Load(cmd, args); err != nil {
-					fmt.Fprintf(os.Stderr, "%v\n", err)
-					os.Exit(1)
-				}
-
-				if err := gitm.cmdFetch(cmd, args); err != nil {
-					fmt.Fprintf(os.Stderr, "%v\n", err)
-					os.Exit(1)
-				}
-			},
-		},
-		&cobra.Command{
-			Use:   "status",
-			Short: "Get repo status",
-			Run: func(cmd *cobra.Command, args []string) {
-				if err := gitm.Load(cmd, args); err != nil {
-					fmt.Fprintf(os.Stderr, "%v\n", err)
-					os.Exit(1)
-				}
-
-				if err := gitm.cmdStatus(cmd, args); err != nil {
 					fmt.Fprintf(os.Stderr, "%v\n", err)
 					os.Exit(1)
 				}
