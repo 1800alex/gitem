@@ -1,25 +1,26 @@
-package main
+package pull
 
 import (
 	"context"
 	"fmt"
+	"gitm/internal/gitm"
 	"os"
 
 	"github.com/spf13/cobra"
 )
 
-type PullCmd struct {
-	gitm *Gitm
+type Cmd struct {
+	gitm *gitm.Gitm
 	root *cobra.Command
 }
 
-func (c *PullCmd) cmdPull(cmd *cobra.Command, args []string) error {
-	return c.gitm.NewWorker(0, func(ctx context.Context, repoConfig RepoConfig) error {
+func (c *Cmd) cmdPull(cmd *cobra.Command, args []string) error {
+	return c.gitm.NewWorker(0, func(ctx context.Context, repoConfig gitm.RepoConfig) error {
 		return c.cmdPullRepo(ctx, repoConfig)
 	})
 }
 
-func (c *PullCmd) cmdPullRepo(ctx context.Context, repoConfig RepoConfig) error {
+func (c *Cmd) cmdPullRepo(ctx context.Context, repoConfig gitm.RepoConfig) error {
 	if _, err := os.Stat(repoConfig.Path); err == nil {
 		if err := c.gitm.RunCommandWithOutputFormatting(ctx, "git", []string{"-C", repoConfig.Path, "pull"}); err != nil {
 			return fmt.Errorf("Failed to pull repo: %v", err)
@@ -37,21 +38,24 @@ func (c *PullCmd) cmdPullRepo(ctx context.Context, repoConfig RepoConfig) error 
 			}
 		}
 	} else {
-		return fmt.Errorf("Repo %s does not exist", c.gitm.repoName)
+		return fmt.Errorf("Repo %s does not exist", repoConfig.Name)
 	}
 
 	return nil
 }
 
-func (c *PullCmd) Init(gitm *Gitm, cmd *cobra.Command) error {
+// New creates a new gitm command
+func New(gitm *gitm.Gitm, opts *gitm.GitmOptions, root *cobra.Command) *Cmd {
+	c := Cmd{}
+
 	c.gitm = gitm
-	c.root = cmd
+	c.root = root
 
 	pullCmd := cobra.Command{
 		Use:   "pull",
 		Short: "Pull repos",
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := c.gitm.Load(cmd, args); err != nil {
+			if err := c.gitm.Init(opts, cmd, args); err != nil {
 				fmt.Fprintf(os.Stderr, "%v\n", err)
 				os.Exit(1)
 			}
@@ -65,5 +69,5 @@ func (c *PullCmd) Init(gitm *Gitm, cmd *cobra.Command) error {
 
 	c.root.AddCommand(&pullCmd)
 
-	return nil
+	return &c
 }

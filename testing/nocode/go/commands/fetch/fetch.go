@@ -1,4 +1,4 @@
-package main
+package fetch
 
 import (
 	"context"
@@ -6,41 +6,46 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+
+	"gitm/internal/gitm"
 )
 
-type FetchCmd struct {
-	gitm *Gitm
+type Cmd struct {
+	gitm *gitm.Gitm
 	root *cobra.Command
 }
 
-func (c *FetchCmd) cmdFetch(cmd *cobra.Command, args []string) error {
-	return c.gitm.NewWorker(0, func(ctx context.Context, repoConfig RepoConfig) error {
+func (c *Cmd) cmdFetch(cmd *cobra.Command, args []string) error {
+	return c.gitm.NewWorker(0, func(ctx context.Context, repoConfig gitm.RepoConfig) error {
 		return c.cmdFetchRepo(ctx, repoConfig)
 	})
 }
 
-func (c *FetchCmd) cmdFetchRepo(ctx context.Context, repoConfig RepoConfig) error {
+func (c *Cmd) cmdFetchRepo(ctx context.Context, repoConfig gitm.RepoConfig) error {
 	if _, err := os.Stat(repoConfig.Path); err == nil {
 		err := c.gitm.RunCommandWithOutputFormatting(ctx, "git", []string{"-C", repoConfig.Path, "fetch"})
 		if err != nil {
 			return fmt.Errorf("Failed to fetch repo: %v", err)
 		}
 	} else {
-		return fmt.Errorf("Repo %s does not exist", c.gitm.repoName)
+		return fmt.Errorf("Repo %s does not exist", repoConfig.Name)
 	}
 
 	return nil
 }
 
-func (c *FetchCmd) Init(gitm *Gitm, cmd *cobra.Command) error {
+// New creates a new gitm command
+func New(gitm *gitm.Gitm, opts *gitm.GitmOptions, root *cobra.Command) *Cmd {
+	c := Cmd{}
+
 	c.gitm = gitm
-	c.root = cmd
+	c.root = root
 
 	fetchCmd := cobra.Command{
 		Use:   "fetch",
 		Short: "Fetch repos",
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := c.gitm.Load(cmd, args); err != nil {
+			if err := c.gitm.Init(opts, cmd, args); err != nil {
 				fmt.Fprintf(os.Stderr, "%v\n", err)
 				os.Exit(1)
 			}
@@ -54,5 +59,5 @@ func (c *FetchCmd) Init(gitm *Gitm, cmd *cobra.Command) error {
 
 	c.root.AddCommand(&fetchCmd)
 
-	return nil
+	return &c
 }

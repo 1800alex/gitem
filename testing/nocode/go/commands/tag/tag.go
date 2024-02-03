@@ -1,25 +1,27 @@
-package main
+package tag
 
 import (
 	"context"
 	"fmt"
 	"os"
 
+	"gitm/internal/gitm"
+
 	"github.com/spf13/cobra"
 )
 
-type TagCmd struct {
-	gitm *Gitm
+type Cmd struct {
+	gitm *gitm.Gitm
 	root *cobra.Command
 }
 
-func (c *TagCmd) cmdTag(cmd *cobra.Command, args []string) error {
-	return c.gitm.NewWorker(0, func(ctx context.Context, repoConfig RepoConfig) error {
+func (c *Cmd) cmdTag(cmd *cobra.Command, args []string) error {
+	return c.gitm.NewWorker(0, func(ctx context.Context, repoConfig gitm.RepoConfig) error {
 		return c.cmdTagRepo(ctx, repoConfig, args)
 	})
 }
 
-func (c *TagCmd) cmdTagRepo(ctx context.Context, repoConfig RepoConfig, args []string) error {
+func (c *Cmd) cmdTagRepo(ctx context.Context, repoConfig gitm.RepoConfig, args []string) error {
 	cmdArgs := []string{"-C", repoConfig.Path, "tag"}
 
 	cmdArgs = append(cmdArgs, args...)
@@ -30,21 +32,24 @@ func (c *TagCmd) cmdTagRepo(ctx context.Context, repoConfig RepoConfig, args []s
 		}
 
 	} else {
-		return fmt.Errorf("Repo %s does not exist", c.gitm.repoName)
+		return fmt.Errorf("Repo %s does not exist", repoConfig.Name)
 	}
 
 	return nil
 }
 
-func (c *TagCmd) Init(gitm *Gitm, cmd *cobra.Command) error {
+// New creates a new gitm command
+func New(gitm *gitm.Gitm, opts *gitm.GitmOptions, root *cobra.Command) *Cmd {
+	c := Cmd{}
+
 	c.gitm = gitm
-	c.root = cmd
+	c.root = root
 
 	tagCmd := cobra.Command{
 		Use:   "tag",
 		Short: "Tag",
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := c.gitm.Load(cmd, args); err != nil {
+			if err := c.gitm.Init(opts, cmd, args); err != nil {
 				fmt.Fprintf(os.Stderr, "%v\n", err)
 				os.Exit(1)
 			}
@@ -58,5 +63,5 @@ func (c *TagCmd) Init(gitm *Gitm, cmd *cobra.Command) error {
 
 	c.root.AddCommand(&tagCmd)
 
-	return nil
+	return &c
 }
