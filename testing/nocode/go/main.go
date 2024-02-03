@@ -14,6 +14,7 @@ import (
 	"gitm/commands/foreach"
 	"gitm/commands/pull"
 	"gitm/commands/repos"
+	"gitm/commands/run"
 	"gitm/commands/status"
 	"gitm/commands/tag"
 )
@@ -29,16 +30,25 @@ func cmdHelp(cmd *cobra.Command, args []string) {
 }
 
 func main() {
-	var rootCmd = &cobra.Command{Use: "gitm"}
 	var opts gitm.GitmOptions
+	gitmObj := gitm.New(opts)
+
+	var rootCmd *cobra.Command
+	rootCmd = &cobra.Command{
+		Use: "gitm",
+		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+			if err := gitmObj.Init(&opts, cmd, args); err != nil {
+				fmt.Fprintf(os.Stderr, "%v\n", err)
+				os.Exit(1)
+			}
+		},
+	}
 
 	rootCmd.PersistentFlags().StringVarP(&opts.ConfigFile, "config", "c", "", "Specify config file")
 	rootCmd.PersistentFlags().StringVarP(&opts.RepoName, "repo", "r", "", "Specify repo")
 	rootCmd.PersistentFlags().StringVarP(&opts.GroupName, "group", "g", "", "Specify group")
 	rootCmd.PersistentFlags().BoolVarP(&opts.DebugMode, "debug", "", false, "Enable debug mode")
 	rootCmd.PersistentFlags().IntVarP(&opts.MaxWorkers, "max-workers", "", 0, "Specify max workers (default: number of CPUs)")
-
-	gitmObj := gitm.New(opts)
 
 	clone.New(gitmObj, &opts, rootCmd)
 	fetch.New(gitmObj, &opts, rootCmd)
@@ -48,6 +58,7 @@ func main() {
 	tag.New(gitmObj, &opts, rootCmd)
 	repos.New(gitmObj, &opts, rootCmd)
 	foreach.New(gitmObj, &opts, rootCmd)
+	run.New(gitmObj, &opts, rootCmd)
 
 	rootCmd.AddCommand(
 		&cobra.Command{

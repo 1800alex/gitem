@@ -49,11 +49,6 @@ func New(gitm *gitm.Gitm, opts *gitm.GitmOptions, root *cobra.Command) *Cmd {
 		Use:   "tag",
 		Short: "Tag",
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := c.gitm.Init(opts, cmd, args); err != nil {
-				fmt.Fprintf(os.Stderr, "%v\n", err)
-				os.Exit(1)
-			}
-
 			if err := c.cmdTag(cmd, args); err != nil {
 				fmt.Fprintf(os.Stderr, "%v\n", err)
 				os.Exit(1)

@@ -18,6 +18,13 @@ type RepoConfig struct {
 	Group        []string `yaml:"group"`
 }
 
+type CommandConfig struct {
+	Name        string   `yaml:"name"`
+	Description string   `yaml:"description"`
+	Command     string   `yaml:"command"`
+	Group       []string `yaml:"group"`
+}
+
 type LoggingConfig struct {
 	Verbose      *bool   `yaml:"verbose"`
 	Timestamps   *bool   `yaml:"timestamps"`
@@ -39,9 +46,10 @@ type LoggingConfig struct {
 }
 
 type GitmConfig struct {
-	RequireGroup *bool         `yaml:"require-group"`
-	Logging      LoggingConfig `yaml:"logging"`
-	Repos        []RepoConfig  `yaml:"repos"`
+	RequireGroup *bool           `yaml:"require-group"`
+	Logging      LoggingConfig   `yaml:"logging"`
+	Repos        []RepoConfig    `yaml:"repos"`
+	Commands     []CommandConfig `yaml:"commands"`
 }
 
 func findConfigFiles(dir string) []string {

@@ -59,11 +59,6 @@ func New(gitm *gitm.Gitm, opts *gitm.GitmOptions, root *cobra.Command) *Cmd {
 		Use:   "clone",
 		Short: "Clone repos",
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := c.gitm.Init(opts, cmd, args); err != nil {
-				fmt.Fprintf(os.Stderr, "%v\n", err)
-				os.Exit(1)
-			}
-
 			if err := c.cmdClone(cmd, args); err != nil {
 				fmt.Fprintf(os.Stderr, "%v\n", err)
 				os.Exit(1)

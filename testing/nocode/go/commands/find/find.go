@@ -145,11 +145,6 @@ func New(gitm *gitm.Gitm, opts *gitm.GitmOptions, root *cobra.Command) *Cmd {
 
 			c.opts.Search = searchRe
 
-			if err := c.gitm.Init(opts, cmd, args); err != nil {
-				fmt.Fprintf(os.Stderr, "%v\n", err)
-				os.Exit(1)
-			}
-
 			if err := c.cmdFindTag(cmd, args); err != nil {
 				fmt.Fprintf(os.Stderr, "%v\n", err)
 				os.Exit(1)

@@ -16,6 +16,29 @@ logging:
   stderr-prefix: ""
   stderr-redirect: true
 
+commands:
+  - name: status
+    description: "Show the working tree status"
+    command: "git status"
+    group:
+      - all
+      - gitbucket
+      - softserve
+  - name: log
+    description: "Show the commit logs"
+    command: "git log"
+    group:
+      - all
+      - gitbucket
+      - softserve
+  - name: fetch
+    description: "Fetch from the remote repository"
+    command: "git fetch"
+    group:
+      - all
+      - gitbucket
+      - softserve
+
 repos:
   - name: repo1
     url: git@gitbucket:/test/repo1.git
