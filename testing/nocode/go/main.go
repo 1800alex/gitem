@@ -30,29 +30,6 @@ func cmdHelp(cmd *cobra.Command, args []string) {
 	cmd.Usage()
 }
 
-func createSubcommands(rootCmd *cobra.Command) {
-	// Create subcommands here based on AppConfig or any other dynamic logic
-	subCmd1 := &cobra.Command{
-		Use:   "subcommand1",
-		Short: "Subcommand 1",
-		Run: func(cmd *cobra.Command, args []string) {
-			// Subcommand 1 logic using AppConfig
-			fmt.Println("Subcommand 1 with args: ", args)
-		},
-	}
-
-	subCmd2 := &cobra.Command{
-		Use:   "subcommand2",
-		Short: "Subcommand 2",
-		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("Subcommand 2 with args: ", args)
-		},
-	}
-
-	// Add subcommands to the root command
-	rootCmd.AddCommand(subCmd1, subCmd2)
-}
-
 func main() {
 	var opts gitm.GitmOptions
 	gitmObj := gitm.New(opts)
@@ -105,6 +82,10 @@ func main() {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
 		os.Exit(1)
 	}
+
+	// TODO these persistent flags are no longer being used
+	// I wonder if we can find another way to make use of these instead of forcing users to use the environment variables
+	// Maybe we can have a function to bind these to every command, and reload the config before each command
 
 	rootCmd.PersistentFlags().StringVarP(&opts.ConfigFile, "config", "c", "", "Specify config file")
 	rootCmd.PersistentFlags().StringVarP(&opts.RepoName, "repo", "r", "", "Specify repo")
