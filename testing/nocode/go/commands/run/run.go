@@ -92,7 +92,6 @@ func New(gitm *gitm.Gitm, opts *gitm.GitmOptions, root *cobra.Command) *Cmd {
 			Use:   command.Name,
 			Short: command.Description,
 			Run: func(cmd *cobra.Command, args []string) {
-				fmt.Println("Running command: ", command.Name, " with args: ", args)
 				if err := c.cmdRun(cmd, command, args); err != nil {
 					fmt.Fprintf(os.Stderr, "%v\n", err)
 					os.Exit(1)
