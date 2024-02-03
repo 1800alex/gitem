@@ -49,7 +49,13 @@ commands:
       - all
   - name: newest-tag
     description: "Show the newest tag"
-    command: "git tag --sort=-v:refname | head -n 1"
+    command: "git tag {{.tag}} | head -n 1"
+    opts:
+      - name: tag
+        description: "The tag to search for"
+        positional: true
+        required: false
+        type: string
     group:
       - all
 
