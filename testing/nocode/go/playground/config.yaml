@@ -1,39 +1,38 @@
-playground:
-  vars:
-    workspace: /home/test/repositories
-    bin: "/home/test/nocode/task/bin"
-    gitbucket: "git@gitbucket:"
-    whoami:
-      sh: "whoami" # example of a shell command like Taskfile does
-    random:
-      sh: "cat /dev/urandom | hexdump | head -n 1 | tr -d ' '"
-  commands:
-    - name: git
-      description: "Run a git command"
-      command: '{{joinPath .vars.bin "git.sh"}} --workspace ''{{.vars.workspace}}'' --name {{.project.name}} --path ''{{.project.vars.path}}'' {{.args}}'
-      group:
-        - all
-  projects: # Templating these is a bit more complex, but I bet we can figure it out with a bunch of reflection
-    - name: repo1
-      vars:
-        url: "{{.vars.gitbucket}}/test/{{.self.name}}.git" # example of a self reference (.self.name vs .project.name hmm...)
-        path: "{{joinPath .vars.workspace .self.name}}"
-        uses-lfs: no
-        uses-submodules: no
-        git-version:
-          sh: "git --version"
-      group:
-        - all
-        - gitbucket
-        - nolfs
-        - first
-    - name: repo2
-      vars:
-        url: "{{.vars.gitbucket}}/test/{{.self.name}}.git"
-        path: "{{joinPath .vars.workspace .self.name}}"
-        uses-lfs: no
-        uses-submodules: no
-      group:
-        - all
-        - gitbucket
-        - nolfs
+vars:
+  workspace: /home/test/repositories
+  bin: "/home/test/nocode/task/bin"
+  gitbucket: "git@gitbucket:"
+  whoami:
+    sh: "whoami" # example of a shell command like Taskfile does
+  random:
+    sh: "cat /dev/urandom | hexdump | head -n 1 | tr -d ' '"
+commands:
+  - name: git
+    description: "Run a git command"
+    command: '{{joinPath .vars.bin "git.sh"}} --workspace ''{{.vars.workspace}}'' --name {{.project.name}} --path ''{{.project.vars.path}}'' {{.args}}'
+    group:
+      - all
+projects: # Templating these is a bit more complex, but I bet we can figure it out with a bunch of reflection
+  - name: repo1
+    vars:
+      url: "{{.vars.gitbucket}}/test/{{.self.name}}.git" # example of a self reference (.self.name vs .project.name hmm...)
+      path: "{{joinPath .vars.workspace .self.name}}"
+      uses-lfs: no
+      uses-submodules: no
+      git-version:
+        sh: "git --version"
+    group:
+      - all
+      - gitbucket
+      - nolfs
+      - first
+  - name: repo2
+    vars:
+      url: "{{.vars.gitbucket}}/test/{{.self.name}}.git"
+      path: "{{joinPath .vars.workspace .self.name}}"
+      uses-lfs: no
+      uses-submodules: no
+    group:
+      - all
+      - gitbucket
+      - nolfs
