@@ -7,13 +7,13 @@ vars:
   random:
     sh: "cat /dev/urandom | hexdump | head -n 1 | tr -d ' '"
 commands:
-  - name: git
+  git:
     description: "Run a git command"
     command: '{{joinPath .vars.bin "git.sh"}} --workspace ''{{.vars.workspace}}'' --name {{.project.name}} --path ''{{.project.vars.path}}'' {{.args}}'
     group:
       - all
 projects: # Templating these is a bit more complex, but I bet we can figure it out with a bunch of reflection
-  - name: repo1
+  repo1:
     vars:
       url: "{{.vars.gitbucket}}/test/{{.self.name}}.git" # example of a self reference (.self.name vs .project.name hmm...)
       path: "{{joinPath .vars.workspace .self.name}}"
@@ -26,7 +26,7 @@ projects: # Templating these is a bit more complex, but I bet we can figure it o
       - gitbucket
       - nolfs
       - first
-  - name: repo2
+  repo2:
     vars:
       url: "{{.vars.gitbucket}}/test/{{.self.name}}.git"
       path: "{{joinPath .vars.workspace .self.name}}"

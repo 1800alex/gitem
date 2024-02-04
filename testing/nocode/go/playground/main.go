@@ -19,7 +19,6 @@ type ShellVar struct {
 }
 
 type Command struct {
-	Name        string   `yaml:"name"`
 	Description string   `yaml:"description"`
 	Command     string   `yaml:"command"`
 	Group       []string `yaml:"group"`
@@ -36,7 +35,6 @@ func (c *Command) InGroup(group string) bool {
 }
 
 type Project struct {
-	Name  string                 `yaml:"name"`
 	Vars  map[string]interface{} `yaml:"vars"`
 	Group []string               `yaml:"group"`
 }
@@ -53,8 +51,8 @@ func (p *Project) InGroup(group string) bool {
 
 type Config struct {
 	Vars     map[string]interface{} `yaml:"vars"`
-	Commands []Command              `yaml:"commands"`
-	Projects []Project              `yaml:"projects"`
+	Commands map[string]Command     `yaml:"commands"`
+	Projects map[string]Project     `yaml:"projects"`
 }
 
 func joinPath(parts ...interface{}) string {
@@ -189,12 +187,12 @@ func LoadConfig(configFile string) (*LoadedConfig, error) {
 		loadedConfig.Vars[key] = resolvedValue
 	}
 
-	for _, project := range config.Projects {
+	for projectName, project := range config.Projects {
 		// Make a copy of dataMap
 		dataMap := LoadedConfigToMap(&loadedConfig)
 
 		projectMap := make(map[string]interface{})
-		projectMap["name"] = project.Name
+		projectMap["name"] = projectName
 		projectMap["vars"] = make(map[string]interface{})
 		projectMap["group"] = project.Group
 
@@ -233,16 +231,16 @@ func LoadConfig(configFile string) (*LoadedConfig, error) {
 			projectMap["vars"].(map[string]interface{})[key] = resolvedValue
 		}
 
-		loadedConfig.Projects[project.Name] = LoadedProject{
-			Name:  project.Name,
+		loadedConfig.Projects[projectName] = LoadedProject{
+			Name:  projectName,
 			Vars:  projectMap["vars"].(map[string]interface{}),
 			Group: project.Group,
 		}
 	}
 
-	for _, command := range config.Commands {
-		loadedConfig.Commands[command.Name] = LoadedCommand{
-			Name:        command.Name,
+	for commandName, command := range config.Commands {
+		loadedConfig.Commands[commandName] = LoadedCommand{
+			Name:        commandName,
 			Description: command.Description,
 			Command:     command.Command,
 			Group:       command.Group,
