@@ -10,12 +10,19 @@ RUN set -xe \
 	curl \
 	# yq
 	yq \
-	# taskfile
-	go-task-task \
 	# make
 	make \
 	# Clean up
 	&& rm -rf /var/cache/apk/*
+
+# Download and install taskfile version 3.34.1
+RUN set -xe \
+	&& curl -L https://github.com/go-task/task/releases/download/v3.34.1/task_linux_amd64.tar.gz -o /tmp/task.tar.gz \
+	&& tar -xzf /tmp/task.tar.gz -C /tmp \
+	&& mv /tmp/task /usr/local/bin/task \
+	&& rm -rf /tmp/task.tar.gz /tmp/task && \
+	chmod +x /usr/local/bin/task && \
+	task --version
 
 # Add test user with UID 1000 GID 1000
 RUN adduser -D -u 1000 -g 1000 test \

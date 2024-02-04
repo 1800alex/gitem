@@ -1,0 +1,104 @@
+# https://taskfile.dev
+
+version: "3"
+
+output: "prefixed"
+# output:
+#   group:
+#     begin: "[{{.TASK}}]"
+#     end: ""
+
+vars:
+  GIT_WORKSPACE: /home/test/repositories
+  PROJECTS_FILE: projects.yml
+  REPO_NAMES:
+    sh: yq '.repos.[].name' < "{{.PROJECTS_FILE}}"
+
+tasks:
+  default:
+    vars:
+      MY_VAR:
+        sh: yq '.repos.[].name' < "{{.PROJECTS_FILE}}"
+    cmds:
+      - for: { var: MY_VAR }
+        cmd: echo "{{joinPath .GIT_WORKSPACE .ITEM}}"
+
+  repos:
+    cmds:
+      - for: { var: REPO_NAMES }
+        cmd: echo "{{.ITEM}}"
+
+  paths:
+    vars:
+      REPO_PATHS:
+        sh: yq '.repos.[].path' < "{{.PROJECTS_FILE}}"
+    cmds:
+      - for: { var: REPO_PATHS }
+        cmd: echo "{{joinPath .GIT_WORKSPACE .ITEM}}"
+
+  status:
+    cmds:
+      - for: { var: REPO_NAMES }
+        task: git-status
+        vars:
+          REPO_NAME: "{{.ITEM}}"
+
+  clone:
+    cmds:
+      - for: { var: REPO_NAMES }
+        task: git-clone
+        vars:
+          REPO_NAME: "{{.ITEM}}"
+
+  fetch:
+    cmds:
+      - for: { var: REPO_NAMES }
+        task: git-fetch
+        vars:
+          REPO_NAME: "{{.ITEM}}"
+
+  pull:
+    cmds:
+      - for: { var: REPO_NAMES }
+        task: git-pull
+        vars:
+          REPO_NAME: "{{.ITEM}}"
+
+  git-status:
+    vars:
+      REPO_NAME: '{{default "" .REPO_NAME}}'
+      REPO_PATH:
+        sh: yq eval '.repos[] | select(.name == "{{.REPO_NAME}}").path' < "{{.PROJECTS_FILE}}"
+    cmds:
+      - git -C "{{joinPath .GIT_WORKSPACE .REPO_PATH}}" status
+    prefix: "git -C {{joinPath .GIT_WORKSPACE .REPO_PATH}} status"
+
+  git-clone:
+    vars:
+      REPO_NAME: '{{default "" .REPO_NAME}}'
+      REPO_URL:
+        sh: yq eval '.repos[] | select(.name == "{{.REPO_NAME}}").url' < "{{.PROJECTS_FILE}}"
+      REPO_PATH:
+        sh: yq eval '.repos[] | select(.name == "{{.REPO_NAME}}").path' < "{{.PROJECTS_FILE}}"
+    cmds:
+      - echo "cloning {{.REPO_NAME}} from {{.REPO_URL}} to {{joinPath .GIT_WORKSPACE .REPO_PATH}}"
+      - git clone "{{.REPO_URL}}" "{{joinPath .GIT_WORKSPACE .REPO_PATH}}"
+    prefix: "git clone {{.REPO_URL}} {{joinPath .GIT_WORKSPACE .REPO_PATH}}"
+
+  git-fetch:
+    vars:
+      REPO_NAME: '{{default "" .REPO_NAME}}'
+      REPO_PATH:
+        sh: yq eval '.repos[] | select(.name == "{{.REPO_NAME}}").path' < "{{.PROJECTS_FILE}}"
+    cmds:
+      - git -C "{{joinPath .GIT_WORKSPACE .REPO_PATH}}" fetch
+    prefix: "git -C {{joinPath .GIT_WORKSPACE .REPO_PATH}} fetch"
+
+  git-pull:
+    vars:
+      REPO_NAME: '{{default "" .REPO_NAME}}'
+      REPO_PATH:
+        sh: yq eval '.repos[] | select(.name == "{{.REPO_NAME}}").path' < "{{.PROJECTS_FILE}}"
+    cmds:
+      - git -C "{{joinPath .GIT_WORKSPACE .REPO_PATH}}" pull
+    prefix: "git -C {{joinPath .GIT_WORKSPACE .REPO_PATH}} pull"
