@@ -31,7 +31,7 @@ tasks:
       REPO_CMD: '{{default "" .REPO_CMD}}'
     cmds:
       - bin/git.sh --config "{{.PROJECTS_FILE}}" --workspace "{{.GIT_WORKSPACE}}" --name "{{.REPO_NAME}}" {{.REPO_CMD}} {{.CLI_ARGS}}
-    prefix: "bin/git.sh {{.REPO_NAME}} {{.REPO_CMD}} {{.CLI_ARGS}}"
+    prefix: "bin/git.sh {{REPO_NAME}} {{.REPO_CMD}} {{.CLI_ARGS}}"
 
   paths:
     vars:
