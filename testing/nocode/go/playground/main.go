@@ -52,8 +52,7 @@ func resolveVar(value interface{}) (interface{}, error) {
 		// If it's a map, iterate through key-value pairs
 		valMap := value.(map[interface{}]interface{})
 		if cmd, ok := valMap["sh"].(string); ok {
-			cmdParts := strings.Fields(cmd)
-			cmdOutput, err := exec.Command(cmdParts[0], cmdParts[1:]...).CombinedOutput()
+			cmdOutput, err := exec.Command("sh", []string{"-c", cmd}...).CombinedOutput()
 			if err != nil {
 				return "", err
 			}

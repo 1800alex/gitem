@@ -1,4 +1,3 @@
-# TODO these are not implemented, just playing around with the yaml syntax
 playground:
   vars:
     workspace: /home/test/repositories
@@ -6,6 +5,8 @@ playground:
     gitbucket: "git@gitbucket:"
     whoami:
       sh: "whoami" # example of a shell command like Taskfile does
+    random:
+      sh: "cat /dev/urandom | hexdump | head -n 1 | tr -d ' '"
   commands:
     - name: git
       description: "Run a git command"
@@ -19,6 +20,8 @@ playground:
         path: "{{joinPath .vars.workspace .self.name}}"
         uses-lfs: no
         uses-submodules: no
+        git-version:
+          sh: "git --version"
       group:
         - all
         - gitbucket
