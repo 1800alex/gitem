@@ -119,31 +119,12 @@ if [ $verbose -eq 1 ]; then
 fi
 
 case "$command_name" in
-	"status")
-		git -C "$project_path" status $@
-		;;
 	"clone")
 		project_url=$(yq eval '.url' <<< "$project_config")
 		git clone "$project_url" "$project_path" $@
 		;;
-	"pull")
-		git -C "$project_path" pull $@
-		;;
-	"fetch")
-		git -C "$project_path" fetch $@
-		;;
-	"log")
-		git -C "$project_path" log $@
-		;;
-	"push")
-		git -C "$project_path" push $@
-		;;
-	"tag")
-		git -C "$project_path" tag $@
-		;;
 	*)
-		2>&1 echo "Invalid command: $command_name"
-		exit 1
+		git -C "$project_path" $command_name $@
 		;;
 esac
 

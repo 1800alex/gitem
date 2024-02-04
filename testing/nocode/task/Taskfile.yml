@@ -25,14 +25,6 @@ tasks:
       - for: { var: REPO_NAMES }
         cmd: echo "{{.ITEM}}"
 
-  git-script:
-    vars:
-      REPO_NAME: '{{default "" .REPO_NAME}}'
-      REPO_CMD: '{{default "" .REPO_CMD}}'
-    cmds:
-      - bin/git.sh --config "{{.PROJECTS_FILE}}" --workspace "{{.GIT_WORKSPACE}}" --name "{{.REPO_NAME}}" {{.REPO_CMD}} {{.CLI_ARGS}}
-    prefix: "bin/git.sh {{.REPO_NAME}} {{.REPO_CMD}} {{.CLI_ARGS}}"
-
   paths:
     vars:
       REPO_PATHS:
@@ -41,58 +33,16 @@ tasks:
       - for: { var: REPO_PATHS }
         cmd: echo "{{joinPath .GIT_WORKSPACE .ITEM}}"
 
-  status:
+  git-script:
+    vars:
+      REPO_NAME: '{{default "" .REPO_NAME}}'
     cmds:
-      - for: { var: REPO_NAMES }
-        task: git-script
-        vars:
-          REPO_NAME: "{{.ITEM}}"
-          REPO_CMD: status
+      - bin/git.sh --config "{{.PROJECTS_FILE}}" --workspace "{{.GIT_WORKSPACE}}" --name "{{.REPO_NAME}}" {{.CLI_ARGS}}
+    prefix: "bin/git.sh --name {{.REPO_NAME}} {{.CLI_ARGS}}"
 
-  clone:
+  git:
     cmds:
       - for: { var: REPO_NAMES }
         task: git-script
         vars:
           REPO_NAME: "{{.ITEM}}"
-          REPO_CMD: clone
-
-  fetch:
-    cmds:
-      - for: { var: REPO_NAMES }
-        task: git-script
-        vars:
-          REPO_NAME: "{{.ITEM}}"
-          REPO_CMD: fetch
-
-  pull:
-    cmds:
-      - for: { var: REPO_NAMES }
-        task: git-script
-        vars:
-          REPO_NAME: "{{.ITEM}}"
-          REPO_CMD: pull
-
-  log:
-    cmds:
-      - for: { var: REPO_NAMES }
-        task: git-script
-        vars:
-          REPO_NAME: "{{.ITEM}}"
-          REPO_CMD: log
-
-  push:
-    cmds:
-      - for: { var: REPO_NAMES }
-        task: git-script
-        vars:
-          REPO_NAME: "{{.ITEM}}"
-          REPO_CMD: push
-
-  tag:
-    cmds:
-      - for: { var: REPO_NAMES }
-        task: git-script
-        vars:
-          REPO_NAME: "{{.ITEM}}"
-          REPO_CMD: tag
