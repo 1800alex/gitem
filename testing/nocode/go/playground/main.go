@@ -250,7 +250,32 @@ func LoadConfig(configFile string) (*LoadedConfig, error) {
 	return &loadedConfig, nil
 }
 
+func (command *LoadedCommand) InGroup(groups []string) bool {
+	for _, group := range groups {
+		for _, g := range command.Group {
+			if g == group {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 func (config *LoadedConfig) GetCommand(name string, projectName string) (string, error) {
+	loadedCommand, ok := config.Commands[name]
+	if !ok {
+		return "", fmt.Errorf("Command %s not found", name)
+	}
+
+	loadedProject, ok := config.Projects[projectName]
+	if !ok {
+		return "", fmt.Errorf("Project %s not found", projectName)
+	}
+
+	if !loadedCommand.InGroup(loadedProject.Group) {
+		return "", nil
+	}
+
 	dataMap := LoadedConfigToMap(config)
 
 	commands, ok := dataMap["commands"].(map[string]interface{})
