@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"path"
 	"reflect"
 	"strings"
 	"text/template"
@@ -39,7 +40,7 @@ func joinPath(parts ...interface{}) string {
 	for _, part := range parts {
 		pathParts = append(pathParts, fmt.Sprintf("%v", part))
 	}
-	return strings.Join(pathParts, "/")
+	return path.Join(pathParts...)
 }
 
 func resolveVar(value interface{}) (interface{}, error) {
