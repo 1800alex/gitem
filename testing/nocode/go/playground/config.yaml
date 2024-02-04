@@ -10,7 +10,7 @@ playground:
   commands:
     - name: git
       description: "Run a git command"
-      command: '{{joinPath .vars.bin "git.sh"}} --workspace ''{{.vars.workspace}}'''' --name {{.project.name}} --path ''{{.project.vars.path}}'' {{.args}}'
+      command: '{{joinPath .vars.bin "git.sh"}} --workspace ''{{.vars.workspace}}'' --name {{.project.name}} --path ''{{.project.vars.path}}'' {{.args}}'
       group:
         - all
   projects: # Templating these is a bit more complex, but I bet we can figure it out with a bunch of reflection

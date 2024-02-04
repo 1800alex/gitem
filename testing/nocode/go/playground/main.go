@@ -197,4 +197,32 @@ func main() {
 	fmt.Println("Final dataMap")
 	fmt.Println(dataMap)
 
+	// simulate executing a command where we pass in a new dataMap
+	commandDataMap := make(map[string]interface{})
+	commandDataMap["vars"] = dataMap["vars"]
+	command := config.Playground.Commands[0]
+	commandDataMap["project"] = dataMap[config.Playground.Projects[0].Name]
+	commandDataMap["args"] = strings.Join(os.Args[1:], " ")
+
+	fmt.Println("Command dataMap")
+	fmt.Println(command.Name, config.Playground.Projects[0].Name, commandDataMap)
+
+	// execute the template with the resolved value and our latest dataMap
+	tpl, err = tpl.Parse(command.Command)
+	if err != nil {
+		fmt.Printf("Error parsing template: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Execute the template
+	var buf bytes.Buffer
+	err = tpl.Execute(&buf, commandDataMap)
+	if err != nil {
+		fmt.Printf("Error executing template: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Println("Final command")
+	fmt.Println(buf.String())
+
 }
